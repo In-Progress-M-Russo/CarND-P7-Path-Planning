@@ -55,7 +55,7 @@ int main() {
   int lane = 1;
 
   // Reference velocity
-  double ref_vel = 49.5;
+  double ref_vel = 0;
 
   h.onMessage([&ref_vel, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
@@ -106,7 +106,51 @@ int main() {
 
           int prev_size = previous_path_x.size();
 
-          std::cout << "PREVIOUS SIZE = "<< prev_size << std::endl;
+          if (prev_size>0){
+            car_s = end_path_s;
+          }
+
+          bool too_close = false;
+
+          for (int i = 0; i<sensor_fusion.size();i++){
+            float d = sensor_fusion[i][6];
+            if (d < (2+4*lane+2) && d > (2+4*lane-2)){
+              // car in the same lane as ego
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy*vy);
+              double check_car_s = sensor_fusion[i][5];
+
+              check_car_s +=((double)prev_size*0.02*check_speed);
+
+              if((check_car_s > car_s) && ((check_car_s - car_s) < 30)){
+                // we're going to hit this, so slow down
+
+                //ref_vel = 29.5;
+                too_close = true;
+
+                // brutally change lane left
+                if (lane>0){
+                  std::cout << "CHANGING LANE" << '\n';
+                  lane = 0;
+                }
+              }
+
+            }
+          }
+          //std::cout << "PREVIOUS SIZE = "<< prev_size << std::endl;
+
+          if (too_close == true){
+            std::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
+            ref_vel -= 0.224;
+          }
+          else if (ref_vel < 49.5){
+            std::cout << "ACCELERATING" << '\n';
+            ref_vel+= 0.224;
+          }
+          else{
+            std::cout << "MAINTANING SPEED" << '\n';
+          }
 
           for (int i = 0; i < prev_size; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
@@ -169,8 +213,8 @@ int main() {
           ptsy.push_back(next_wp1[1]);
           ptsy.push_back(next_wp2[1]);
 
-          std::cout << "TRAJ WAYPOINTS X = " << next_wp0[0] << ", " << next_wp1[0] << ", " << next_wp2[0] << std::endl;
-          std::cout << "TRAJ WAYPOINTS Y = " << next_wp0[1] << ", " << next_wp1[1] << ", " << next_wp2[1] << std::endl;
+          //std::cout << "TRAJ WAYPOINTS X = " << next_wp0[0] << ", " << next_wp1[0] << ", " << next_wp2[0] << std::endl;
+          //std::cout << "TRAJ WAYPOINTS Y = " << next_wp0[1] << ", " << next_wp1[1] << ", " << next_wp2[1] << std::endl;
 
           // shift in car's ref frame
           for(int i = 0; i<ptsx.size(); i++){
@@ -180,7 +224,7 @@ int main() {
             ptsx[i] = (shift_x * cos(0 - ref_yaw) - shift_y * sin(0 - ref_yaw));
             ptsy[i] = (shift_x * sin(0 - ref_yaw) + shift_y * cos(0 - ref_yaw));
 
-            std::cout << "anchor "<< i << " x,y - car frame = " << ptsx[i] << ", " << ptsy[i] << std::endl;
+            //std::cout << "anchor "<< i << " x,y - car frame = " << ptsx[i] << ", " << ptsy[i] << std::endl;
           }
 
           // generate a spline
