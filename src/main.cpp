@@ -8,6 +8,8 @@
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
+#include "cost.h"
+#include "vehicle.h"
 
 // for convenience
 using nlohmann::json;
