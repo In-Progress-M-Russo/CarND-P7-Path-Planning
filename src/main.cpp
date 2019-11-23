@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
@@ -10,6 +11,7 @@
 #include "spline.h"
 #include "cost.h"
 #include "vehicle.h"
+#include "road.h"
 
 // for convenience
 using nlohmann::json;
@@ -54,12 +56,19 @@ int main() {
   }
 
   // Starting lane identifier
+  // lane can be {0,1,2}
   int lane = 1;
 
   // Reference velocity
+  // Starting from 0 the vehicle will accelerate/decelerate
   double ref_vel = 0;
 
-  h.onMessage([&ref_vel, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
+  // EGO STATE
+  // Initialized at KL
+  string ego_state = "KL";
+
+  // lambda function called on message from sim
+  h.onMessage([&ref_vel, &max_s, &lane, &ego_state, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
@@ -86,7 +95,13 @@ int main() {
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
 
-          // Previous path data given to the Planner
+          std::cout << "****************************************** "<< std::endl;
+          std::cout << "Ego Vehicle state: "<< ego_state << std::endl;
+          // std::cout << "Ego Vehicle x: "<< car_x << std::endl;
+          // std::cout << "Ego Vehicle y: "<< car_y << std::endl;
+          // std::cout << "Ego Vehicle s: "<< car_s << std::endl;
+          // Previous path data given to the Planner and NOT yet executed by
+          // the car
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
           // Previous path's end s and d values
@@ -99,31 +114,137 @@ int main() {
 
           json msgJson;
 
-
-          //====================================================================
-          // Initialize  trajectory with previous path]
-
+          // Vectors to pass as next trajectory
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+          // Parameters
+
+          // lane considered 4 meters wide
+          float lane_width = 4;
+
+          // sampling interval
+          float delta_t = 0.02;
+
+          // Size of what's left of the previos path
+          // This will depend on how much of the previous planned path the car
+          // has covered in the 0.02 seconds between simulator steps, that in
+          // turn is a function of the car's speed
           int prev_size = previous_path_x.size();
 
+          // initial case only
           if (prev_size>0){
             car_s = end_path_s;
           }
 
+          // ===================================================================
+          // CREATE ROAD OBJECT
+          int speed_limit = 50;
+          int num_of_lanes = 3;
+
+          Road road = Road(speed_limit, num_of_lanes);
+
+          // POPULATE ROAD OBJECT from sensor fusion data
+          for (int l = 0; l < sensor_fusion.size(); ++l) {
+            float sensed_vx  = sensor_fusion[l][3];
+            float sensed_vy  = sensor_fusion[l][4];
+            float sensed_s  = sensor_fusion[l][5];
+            float sensed_d  = sensor_fusion[l][6];
+
+            int sensed_lane;
+
+            if ((sensed_d >= 0.0) && (sensed_d < lane_width)){
+              sensed_lane = 0;
+            } else if ((sensed_d >= lane_width) && (sensed_d < 2*lane_width)){
+              sensed_lane = 1;
+            } else {
+              sensed_lane = 2;
+            }
+
+            float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
+
+            Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_speed,0);
+            vehicle.state = "CS";
+            road.vehicles_added += 1;
+            road.vehicles.insert(std::pair<int,Vehicle>(road.vehicles_added,vehicle));
+          }
+
+          // PREDICT
+          map<int ,vector<Vehicle> > predictions;
+
+          map<int, Vehicle>::iterator it = road.vehicles.begin();
+
+          while (it != road.vehicles.end()) {
+            int v_id = it->first;
+            vector<Vehicle> preds = it->second.generate_predictions();
+            predictions[v_id] = preds;
+            ++it;
+          }
+
+          // create Ego vehicle
+          int sensed_ego_lane;
+
+          if ((car_d >= 0.0) && (car_d < lane_width)){
+            sensed_ego_lane = 0;
+          } else if ((car_d >= lane_width) && (car_d < 2*lane_width)){
+            sensed_ego_lane = 1;
+          } else {
+            sensed_ego_lane = 2;
+          }
+
+          // car speed in mph
+          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
+          ego_vehicle.state = ego_state;
+          ego_vehicle.goal_s = max_s;
+          ego_vehicle.target_speed = ref_vel*0.44704;
+
+          // change state based on predictions
+          vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
+          ego_vehicle.realize_next_state(trajectory);
+
+          ego_state = ego_vehicle.state;
+          std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
+          //road.vehicles.insert(std::pair<int,Vehicle>(-1,ego_vehicle));
+
+
+
+          // ===================================================================
+          // variable used in the FSM
           bool too_close = false;
 
+          std::cout << "Vehicles in sensor range: "<< sensor_fusion.size() << std::endl;
           for (int i = 0; i<sensor_fusion.size();i++){
+
+            // std::cout << "Vehicle id: "<< sensor_fusion[i][0] << std::endl;
+            // std::cout << "Vehicle x: "<< sensor_fusion[i][1] << std::endl;
+            // std::cout << "Vehicle y: "<< sensor_fusion[i][2] << std::endl;
+            // std::cout << "Vehicle vx: "<< sensor_fusion[i][3] << std::endl;
+            // std::cout << "Vehicle vy: "<< sensor_fusion[i][4] << std::endl;
+            // std::cout << "Vehicle s: "<< sensor_fusion[i][5] << std::endl;
+            // std::cout << "Vehicle d: "<< sensor_fusion[i][6] << std::endl;
+            //
+            // float other_v_s =  sensor_fusion[i][5];
+            // if (other_v_s < car_s){
+            //   std::cout << "Vehicle id: "<< sensor_fusion[i][0] << " Is behind ego " << std::endl;
+            // }else{
+            //   std::cout << "Vehicle id: "<< sensor_fusion[i][0] << " Is ahead ego " << std::endl;
+            // }
+
+
             float d = sensor_fusion[i][6];
-            if (d < (2+4*lane+2) && d > (2+4*lane-2)){
-              // car in the same lane as ego
+            if (d < (lane_width+lane_width*lane) && d > (lane_width*lane)){
+              std::cout << "There's a vehicle in ego lane" << std::endl;
+              // there is a car in the same lane as ego
+              // check its velocity
               double vx = sensor_fusion[i][3];
               double vy = sensor_fusion[i][4];
               double check_speed = sqrt(vx*vx + vy*vy);
-              double check_car_s = sensor_fusion[i][5];
 
-              check_car_s +=((double)prev_size*0.02*check_speed);
+              // check its position, starting from current s
+              double check_car_s = sensor_fusion[i][5];
+              // where will the car be at the end of the path previously planned
+              // considering constant velocity and sampling interval
+              check_car_s +=((double)prev_size*delta_t*check_speed);
 
               if((check_car_s > car_s) && ((check_car_s - car_s) < 30)){
                 // we're going to hit this, so slow down
@@ -132,15 +253,17 @@ int main() {
                 too_close = true;
 
                 // brutally change lane left
-                if (lane>0){
-                  std::cout << "CHANGING LANE" << '\n';
-                  lane = 0;
-                }
+                // if (lane>0){
+                //   std::cout << "CHANGING LANE" << '\n';
+                //   lane = 0;
+                // }
               }
 
             }
           }
-          //std::cout << "PREVIOUS SIZE = "<< prev_size << std::endl;
+          std::cout << "****************************************** "<< std::endl;
+
+          std::cout << "PREVIOUS SIZE = "<< prev_size << std::endl;
 
           if (too_close == true){
             std::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
@@ -154,6 +277,10 @@ int main() {
             std::cout << "MAINTANING SPEED" << '\n';
           }
 
+          // TRAJ GENERATION
+          //====================================================================
+          // Initialize  trajectory with previous path]
+          //
           for (int i = 0; i < prev_size; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -203,9 +330,9 @@ int main() {
           }
 
           // future points
-          vector<double> next_wp0 = getXY(car_s + 30,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-          vector<double> next_wp1 = getXY(car_s + 60,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-          vector<double> next_wp2 = getXY(car_s + 90,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+          vector<double> next_wp0 = getXY(car_s + 30,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+          vector<double> next_wp1 = getXY(car_s + 60,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+          vector<double> next_wp2 = getXY(car_s + 90,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
 
           ptsx.push_back(next_wp0[0]);
           ptsx.push_back(next_wp1[0]);
@@ -243,7 +370,7 @@ int main() {
           // add them to path
           for (int i = 1; i <= 50 - prev_size; i++){
 
-            double N = target_distance/(.02*ref_vel/2.24);
+            double N = target_distance/(delta_t*ref_vel/2.24);
             double x_point = x_add_on + target_x/N;
             double y_point = s(x_point);
 

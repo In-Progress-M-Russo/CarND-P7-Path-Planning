@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "cost.h"
+#include <iostream>
 
 using std::string;
 using std::vector;
@@ -43,18 +44,25 @@ vector<Vehicle> Vehicle::choose_next_state(map<int, vector<Vehicle>> &prediction
    *    trajectory vectors might have size 0 if no possible trajectory exists
    *    for the state.
    * 3. calculate_cost - Included from cost.cpp, computes the cost for a trajectory.
-   *
-   * TODO: Your solution here.
    */
   vector<string> states = successor_states();
+
+  for(int l = 0; l< states.size(); l++){
+    std::cout << "Possible successor state = " << states[l] << std::endl;
+  }
+
   float cost;
   vector<float> costs;
   vector<vector<Vehicle>> final_trajectories;
 
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     vector<Vehicle> trajectory = generate_trajectory(*it, predictions);
+
     if (trajectory.size() != 0) {
       cost = calculate_cost(*this, predictions, trajectory);
+
+      std::cout << "Trajectory Cost = " << cost << std::endl;
+
       costs.push_back(cost);
       final_trajectories.push_back(trajectory);
     }
@@ -63,9 +71,6 @@ vector<Vehicle> Vehicle::choose_next_state(map<int, vector<Vehicle>> &prediction
   vector<float>::iterator best_cost = min_element(begin(costs), end(costs));
   int best_idx = distance(begin(costs), best_cost);
 
-  /**
-   * TODO: Change return value here:
-   */
   return final_trajectories[best_idx];
 }
 
@@ -103,10 +108,12 @@ vector<Vehicle> Vehicle::generate_trajectory(string state,
   if (state.compare("CS") == 0) {
     trajectory = constant_speed_trajectory();
   } else if (state.compare("KL") == 0) {
+    //std::cout<<"Generate KL Traj"<< std::endl;
     trajectory = keep_lane_trajectory(predictions);
   } else if (state.compare("LCL") == 0 || state.compare("LCR") == 0) {
     trajectory = lane_change_trajectory(state, predictions);
   } else if (state.compare("PLCL") == 0 || state.compare("PLCR") == 0) {
+    //std::cout<<"Generate PLC Traj"<< std::endl;
     trajectory = prep_lane_change_trajectory(state, predictions);
   }
 
@@ -162,6 +169,7 @@ vector<Vehicle> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> &predict
   float new_s = kinematics[0];
   float new_v = kinematics[1];
   float new_a = kinematics[2];
+  //std::cout<<"KL Kinematics : "<< new_s << ", "<< new_v << ", "<< new_a << std::endl;
   trajectory.push_back(Vehicle(this->lane, new_s, new_v, new_a, "KL"));
 
   return trajectory;
