@@ -6,9 +6,9 @@ Overview
 
 This Project is submitted as part of the Udacity Self-Driving Car Nanodegree.
 
-For it the goal is to write C++ code implementing a path planner capable of driving a vehicle around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit.
+For it the goal is to write C++ code implementing a path planner capable of driving a vehicle around a virtual highway populated by other traffic, adjusting speed and trajectory as needed while avoiding collisions.
 
-The source code for this project, is submitted as part of this Git repo (in the [src](/src) folder). A detailed explanation is provided in a separate [writeup](Path_Planning_writeup.md), that documents also the results obtained.  
+The source code for this project is submitted as part of this Git repo (in the [src](/src) folder). A detailed explanation is provided in a separate [writeup](Path_Planning_writeup.md), that documents also the results obtained.  
 
 Dependencies
 ---
