@@ -11,12 +11,12 @@
 #include "spline.h"
 #include "cost.h"
 #include "vehicle.h"
-#include "road.h"
 
 // for convenience
 using nlohmann::json;
 using std::string;
 using std::vector;
+using std::map;
 
 int main() {
   uWS::Hub h;
@@ -138,13 +138,16 @@ int main() {
           }
 
           // ===================================================================
-          // CREATE ROAD OBJECT
+          // CREATE MAP OF VEHICLE OBJECTS
           int speed_limit = 50;
           int num_of_lanes = 3;
+          int vehicles_added = 0;
 
-          Road road = Road(speed_limit, num_of_lanes);
+          map<int, Vehicle> vehicles;
+          map<int ,vector<Vehicle> > predictions;
 
-          // POPULATE ROAD OBJECT from sensor fusion data
+          // POPULATE MAP from sensor fusion data with current state
+          // For each vehicle, also predict a trajectory based on current state
           for (int l = 0; l < sensor_fusion.size(); ++l) {
             float sensed_vx  = sensor_fusion[l][3];
             float sensed_vy  = sensor_fusion[l][4];
@@ -163,22 +166,16 @@ int main() {
 
             float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
 
+            // create vehicle object from current state
             Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_speed,0);
             vehicle.state = "CS";
-            road.vehicles_added += 1;
-            road.vehicles.insert(std::pair<int,Vehicle>(road.vehicles_added,vehicle));
-          }
+            vehicles_added += 1;
+            vehicles.insert(std::pair<int,Vehicle>(vehicles_added,vehicle));
 
-          // PREDICT
-          map<int ,vector<Vehicle> > predictions;
-
-          map<int, Vehicle>::iterator it = road.vehicles.begin();
-
-          while (it != road.vehicles.end()) {
-            int v_id = it->first;
-            vector<Vehicle> preds = it->second.generate_predictions();
-            predictions[v_id] = preds;
-            ++it;
+            // create predicted trajectory
+            // NOTE: default horizon = 2 s
+            vector<Vehicle> preds = vehicle.generate_predictions();
+            predictions[vehicles_added] = preds;
           }
 
           // create Ego vehicle
