@@ -298,20 +298,23 @@ int main() {
           // past points
           if (prev_size<2){
 
-            if (prev_size == 0 ){
+
               ptsx.push_back(car_x);
               ptsy.push_back(car_y);
-            } else {
-              double prev_car_x = ref_x - cos(car_yaw);
-              double prev_car_y = ref_x - sin(car_yaw);
 
-              ptsx.push_back(prev_car_x);
-              ptsx.push_back(car_x);
 
-              ptsy.push_back(prev_car_y);
-              ptsy.push_back(car_y);
-            }
-          } else {
+            // else {
+            //   double prev_car_x = ref_x - cos(car_yaw);
+            //   double prev_car_y = ref_x - sin(car_yaw);
+            //
+            //   ptsx.push_back(prev_car_x);
+            //   ptsx.push_back(car_x);
+            //
+            //   ptsy.push_back(prev_car_y);
+            //   ptsy.push_back(car_y);
+            // }
+          }
+          else {
             ref_x = previous_path_x[prev_size - 1];
             ref_y = previous_path_y[prev_size - 1];
 
