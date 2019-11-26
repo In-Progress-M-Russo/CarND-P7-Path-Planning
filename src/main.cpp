@@ -144,6 +144,24 @@ int main() {
           map<int, Vehicle> vehicles;
           map<int ,vector<Vehicle> > predictions;
 
+          // ===================================================================
+          // create Ego vehicle
+          int sensed_ego_lane;
+
+          if ((car_d >= 0.0) && (car_d < lane_width)){
+            sensed_ego_lane = 0;
+          } else if ((car_d >= lane_width) && (car_d < 2*lane_width)){
+            sensed_ego_lane = 1;
+          } else {
+            sensed_ego_lane = 2;
+          }
+
+          // car speed in mph
+          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
+          ego_vehicle.state = ego_state;
+          ego_vehicle.goal_s = max_s;
+          ego_vehicle.target_speed = ref_vel*0.44704;
+
           // CHECK/MODIFY STATE
           // Only if the initial acceleration phase is over
           if (init_acc_over == true){
@@ -184,26 +202,7 @@ int main() {
               vector<Vehicle> preds = vehicle.generate_predictions();
               predictions[vehicles_added] = preds;
             }
-          }
-
-          // create Ego vehicle
-          int sensed_ego_lane;
-
-          if ((car_d >= 0.0) && (car_d < lane_width)){
-            sensed_ego_lane = 0;
-          } else if ((car_d >= lane_width) && (car_d < 2*lane_width)){
-            sensed_ego_lane = 1;
-          } else {
-            sensed_ego_lane = 2;
-          }
-
-          // car speed in mph
-          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
-          ego_vehicle.state = ego_state;
-          ego_vehicle.goal_s = max_s;
-          ego_vehicle.target_speed = ref_vel*0.44704;
-
-          if (init_acc_over == true){
+            
             // change state based on predictions
             vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
             ego_vehicle.realize_next_state(trajectory);
