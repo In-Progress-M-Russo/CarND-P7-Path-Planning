@@ -228,7 +228,9 @@ int main() {
             ego_vehicle.realize_next_state(trajectory);
 
             ego_state = ego_vehicle.state;
+            lane = ego_vehicle.lane;
             std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
+            std::cout << "Lane Vehicle after predictions: "<< lane << std::endl;
           }
 
           // ===================================================================
