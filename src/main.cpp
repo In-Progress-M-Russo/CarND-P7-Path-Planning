@@ -118,7 +118,7 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
 
           json msgJson;
-          
+
           // ===================================================================
           // INITIALIZATION
           // Vectors to pass as next trajectory
@@ -164,34 +164,34 @@ int main() {
           // NOTE1: speed from msg is in mph
           // NOTE2: vehicle's acceleration is assumed = 0
           Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
-          
+
           // Setting of the current state
           ego_vehicle.state = ego_state;
-          
+
           // Setting of the goals in terms of distance to reach and speed to maintain
           ego_vehicle.goal_s = max_s;
           ego_vehicle.target_speed = ref_vel*0.44704;
 
           // ===================================================================
           // FINITE STATE MACHINE
-          
+
           // Get in it only if the initial acceleration phase is over
           if (init_acc_over == true){
-            
+
             // 1. Create maps for vehicles and trajectories
-            
-            // Vehicle counter 
+
+            // Vehicle counter
             int vehicles_added = 0;
-            
+
             for (int l = 0; l < sensor_fusion.size(); ++l) {
-              
+
               // Create a vehicle object for every vehicle in sensor fusion
               // Read sensed coordinates/velocity
               float sensed_vx  = sensor_fusion[l][3];
               float sensed_vy  = sensor_fusion[l][4];
               float sensed_s  = sensor_fusion[l][5];
               float sensed_d  = sensor_fusion[l][6];
-              
+
               // Define a lane for the vehicle
               int sensed_lane;
 
@@ -202,16 +202,16 @@ int main() {
               } else {
                 sensed_lane = 2;
               }
-              
+
               // Calculate the magnitude of the speed
               float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
 
               // Create vehicle object from current data
               Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_speed,0);
-              
-              // Set a state, assuming constant speed 
+
+              // Set a state, assuming constant speed
               vehicle.state = "CS";
-              
+
               // Insert vehicles in the map
               vehicles_added += 1;
               vehicles.insert(std::pair<int,Vehicle>(vehicles_added,vehicle));
@@ -221,26 +221,26 @@ int main() {
               vector<Vehicle> preds = vehicle.generate_predictions();
               predictions[vehicles_added] = preds;
             }
-            
+
             // 2. Change Ego state based on predictions
-            
+
             vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
             ego_vehicle.realize_next_state(trajectory);
 
             ego_state = ego_vehicle.state;
             std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
           }
-          
+
           // ===================================================================
           // UPDATE REF VELOCITY in case of KL state
           // In case we can stay in this lane let's check if we can accelerate
           // or we'd better slow down
-          
+
           // *************************************
           // DUMMY
-          ego_state = "KL";
+          // ego_state = "KL";
           // *************************************
-          
+
           if (ego_state == "KL"){
             // First of all let's check if there's a chance of getting too close
             // to other cars while keeping this lane, and adapt velocity
@@ -248,17 +248,15 @@ int main() {
 
             // Counter
             int i = 0;
-            
-            // Loop over sensor_fusionm
+
+            // Loop over sensor_fusion
             // until you find a vehicle which is in the same lane as ego AND too close
-            while (too_close == false){
-              
-              i++;
+            while ((too_close == false) && (i<sensor_fusion.size())){
+              // Get d for the vehicle
               float d = sensor_fusion[i][6];
 
-              // check if there's a car in the ego lane
+              // Check if there's a car in the ego lane
               if (d < (lane_width+lane_width*lane) && d > (lane_width*lane)){
-                // std::cout << "There's a vehicle in ego lane" << std::endl;
                 // there is a car in the same lane as ego: calculate its velocity
                 double vx = sensor_fusion[i][3];
                 double vy = sensor_fusion[i][4];
@@ -278,6 +276,9 @@ int main() {
                   too_close = true;
                 }
               }
+
+              // Increment counter
+              i++;
             }
 
             // if we're too close slow down
@@ -297,7 +298,7 @@ int main() {
               std::cout << "MAINTANING SPEED" << '\n';
             }
           }
-          
+
           //====================================================================
           // TRAJ GENERATION
           //====================================================================
