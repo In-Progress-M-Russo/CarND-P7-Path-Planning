@@ -235,17 +235,25 @@ int main() {
           // UPDATE REF VELOCITY in case of KL state
           // In case we can stay in this lane let's check if we can accelerate
           // or we'd better slow down
-
+          
+          // *************************************
+          // DUMMY
           ego_state = "KL";
-
+          // *************************************
+          
           if (ego_state == "KL"){
             // First of all let's check if there's a chance of getting too close
             // to other cars while keeping this lane, and adapt velocity
-
             bool too_close = false;
 
-            // TODO put a while loop until too_close == true
-            for (int i = 0; i<sensor_fusion.size();i++){
+            // Counter
+            int i = 0;
+            
+            // Loop over sensor_fusionm
+            // until you find a vehicle which is in the same lane as ego AND too close
+            while (too_close == false){
+              
+              i++;
               float d = sensor_fusion[i][6];
 
               // check if there's a car in the ego lane
