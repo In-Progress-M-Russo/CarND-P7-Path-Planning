@@ -56,7 +56,8 @@ int main() {
   }
 
   // Starting lane identifier
-  // lane can be {0,1,2}
+  // Lane can be {0,1,2}, left to right
+  // By default the vehicle starts in the middle lane
   int lane = 1;
 
   // Reference velocity
@@ -68,9 +69,8 @@ int main() {
   string ego_state = "KL";
 
   // Initial acceleration phase
-  // while the vehicle is accelerating for the first time (up to 45 mph) we
+  // while the vehicle is accelerating for the first time (up to 50 mph) we
   // will assume to stay in the same lane
-
   bool init_acc_over = false;
 
   // lambda function called on message from sim
@@ -94,6 +94,8 @@ int main() {
         if (event == "telemetry") {
           // j[1] is the data JSON object
 
+          // ===================================================================
+          // MESSAGE PARSING
           // Main car's localization Data
           double car_x = j[1]["x"];
           double car_y = j[1]["y"];
@@ -116,17 +118,17 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
 
           json msgJson;
-
+          
+          // ===================================================================
+          // INITIALIZATION
           // Vectors to pass as next trajectory
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          // Parameters
-
-          // lane considered 4 meters wide
+          // Parameters to be used in following calculations:
+          // Lane width: lane considered 4 meters wide
           float lane_width = 4;
-
-          // sampling interval
+          // Sampling interval
           float delta_t = 0.02;
 
           // Size of what's left of the previos path
@@ -141,11 +143,13 @@ int main() {
             car_s = end_path_s;
           }
 
+          // Maps to be filled with the vehicles in the scene and their possible trajectories
           map<int, Vehicle> vehicles;
           map<int ,vector<Vehicle> > predictions;
 
           // ===================================================================
-          // create Ego vehicle
+          // CREATION OF AN EGO VEHICLE OBJECT
+          // Definition of the ego lane
           int sensed_ego_lane;
 
           if ((car_d >= 0.0) && (car_d < lane_width)){
@@ -156,29 +160,39 @@ int main() {
             sensed_ego_lane = 2;
           }
 
-          // car speed in mph
+          // Instantiation of the ego vehicle object
+          // NOTE1: speed from msg is in mph
+          // NOTE2: vehicle's acceleration is assumed = 0
           Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
+          
+          // Setting of the current state
           ego_vehicle.state = ego_state;
+          
+          // Setting of the goals in terms of distance to reach and speed to maintain
           ego_vehicle.goal_s = max_s;
           ego_vehicle.target_speed = ref_vel*0.44704;
 
-          // CHECK/MODIFY STATE
-          // Only if the initial acceleration phase is over
-          if (init_acc_over == true){
           // ===================================================================
-            // CREATE MAP OF VEHICLE OBJECTS
-            int speed_limit = 50;
-            int num_of_lanes = 3;
+          // FINITE STATE MACHINE
+          
+          // Get in it only if the initial acceleration phase is over
+          if (init_acc_over == true){
+            
+            // 1. Create maps for vehicles and trajectories
+            
+            // Vehicle counter 
             int vehicles_added = 0;
-
-            // POPULATE MAP from sensor fusion data with current state
-            // For each vehicle, also PREDICT a trajectory based on current state
+            
             for (int l = 0; l < sensor_fusion.size(); ++l) {
+              
+              // Create a vehicle object for every vehicle in sensor fusion
+              // Read sensed coordinates/velocity
               float sensed_vx  = sensor_fusion[l][3];
               float sensed_vy  = sensor_fusion[l][4];
               float sensed_s  = sensor_fusion[l][5];
               float sensed_d  = sensor_fusion[l][6];
-
+              
+              // Define a lane for the vehicle
               int sensed_lane;
 
               if ((sensed_d >= 0.0) && (sensed_d < lane_width)){
@@ -188,29 +202,36 @@ int main() {
               } else {
                 sensed_lane = 2;
               }
-
+              
+              // Calculate the magnitude of the speed
               float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
 
-              // create vehicle object from current state
+              // Create vehicle object from current data
               Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_speed,0);
+              
+              // Set a state, assuming constant speed 
               vehicle.state = "CS";
+              
+              // Insert vehicles in the map
               vehicles_added += 1;
               vehicles.insert(std::pair<int,Vehicle>(vehicles_added,vehicle));
 
-              // create predicted trajectory
+              // Create predicted trajectory
               // NOTE: default horizon = 2 s
               vector<Vehicle> preds = vehicle.generate_predictions();
               predictions[vehicles_added] = preds;
             }
             
-            // change state based on predictions
+            // 2. Change Ego state based on predictions
+            
             vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
             ego_vehicle.realize_next_state(trajectory);
 
             ego_state = ego_vehicle.state;
             std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
           }
-
+          
+          // ===================================================================
           // UPDATE REF VELOCITY in case of KL state
           // In case we can stay in this lane let's check if we can accelerate
           // or we'd better slow down
@@ -268,7 +289,8 @@ int main() {
               std::cout << "MAINTANING SPEED" << '\n';
             }
           }
-
+          
+          //====================================================================
           // TRAJ GENERATION
           //====================================================================
           // Initialize  trajectory with previous path]
