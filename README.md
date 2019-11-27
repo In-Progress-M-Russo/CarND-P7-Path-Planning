@@ -12,7 +12,7 @@ The source code for this project is submitted as part of this Git repo (in the [
 
 Dependencies
 ---
-First of all, this project involves the Udacity Term 3 Simulator which can be downloaded [here][releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
+First of all, this project involves the Udacity Term 3 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2)
 
 To run the simulator on Mac/Linux, you might have to first make the binary file executable with the following command:
 ```shell
