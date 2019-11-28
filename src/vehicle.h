@@ -52,8 +52,6 @@ class Vehicle {
 
   void realize_next_state(vector<Vehicle> &trajectory);
 
-  void configure(vector<int> &road_data);
-
   // public Vehicle variables
   struct collider{
     bool collision; // is there a collision?
