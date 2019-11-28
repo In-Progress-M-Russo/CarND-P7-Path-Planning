@@ -310,13 +310,3 @@ void Vehicle::realize_next_state(vector<Vehicle> &trajectory) {
   this->v = next_state.v;
   this->a = next_state.a;
 }
-
-void Vehicle::configure(vector<int> &road_data) {
-  // Called by simulator before simulation begins. Sets various parameters which
-  //   will impact the ego vehicle.
-  target_speed = road_data[0];
-  lanes_available = road_data[1];
-  goal_s = road_data[2];
-  goal_lane = road_data[3];
-  max_acceleration = road_data[4];
-}
