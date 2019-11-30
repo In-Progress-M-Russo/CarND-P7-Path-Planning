@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "spline.h"
+#include "helpers.h"
 
 using std::map;
 using std::string;
@@ -13,44 +15,50 @@ class Vehicle {
  public:
   // Constructors
   Vehicle();
-  Vehicle(int lane, float s, float v, float a, string state="CS");
+  Vehicle(int lane, float s, float d, float v, float a, float x, float y, float yaw, string state="CS");
 
   // Destructor
   virtual ~Vehicle();
 
   // Vehicle functions
-  vector<Vehicle> choose_next_state(map<int, vector<Vehicle>> &predictions);
+  // vector<Vehicle> choose_next_state(map<int, vector<Vehicle>> &predictions);
+  //
+  // vector<string> successor_states();
+  //
+  // vector<Vehicle> generate_trajectory(string state,
+  //                                     map<int, vector<Vehicle>> &predictions);
+  //
+  // vector<float> get_kinematics(map<int, vector<Vehicle>> &predictions, int lane);
+  //
+  // vector<Vehicle> constant_speed_trajectory();
+  //
+  // vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> &predictions);
+  //
+  // vector<Vehicle> lane_change_trajectory(string state,
+  //                                        map<int, vector<Vehicle>> &predictions);
+  //
+  // vector<Vehicle> prep_lane_change_trajectory(string state,
+  //                                             map<int, vector<Vehicle>> &predictions);
+  //
+  // void increment(int dt);
+  //
+  // float position_at(int t);
+  //
+  // bool get_vehicle_behind(map<int, vector<Vehicle>> &predictions, int lane,
+  //                         Vehicle &rVehicle);
+  //
+  // bool get_vehicle_ahead(map<int, vector<Vehicle>> &predictions, int lane,
+  //                        Vehicle &rVehicle);
+  //
+  // vector<Vehicle> generate_predictions(int horizon=2);
 
-  vector<string> successor_states();
+  // void realize_next_state(vector<Vehicle> &trajectory);
 
-  vector<Vehicle> generate_trajectory(string state,
-                                      map<int, vector<Vehicle>> &predictions);
-
-  vector<float> get_kinematics(map<int, vector<Vehicle>> &predictions, int lane);
-
-  vector<Vehicle> constant_speed_trajectory();
-
-  vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> &predictions);
-
-  vector<Vehicle> lane_change_trajectory(string state,
-                                         map<int, vector<Vehicle>> &predictions);
-
-  vector<Vehicle> prep_lane_change_trajectory(string state,
-                                              map<int, vector<Vehicle>> &predictions);
-
-  void increment(int dt);
-
-  float position_at(int t);
-
-  bool get_vehicle_behind(map<int, vector<Vehicle>> &predictions, int lane,
-                          Vehicle &rVehicle);
-
-  bool get_vehicle_ahead(map<int, vector<Vehicle>> &predictions, int lane,
-                         Vehicle &rVehicle);
-
-  vector<Vehicle> generate_predictions(int horizon=2);
-
-  void realize_next_state(vector<Vehicle> &trajectory);
+  //
+  void generateTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
+                          const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
+                          float dt, double r_vel, int v_lane, float v_lane_width);
+  
 
   // public Vehicle variables
   struct collider{
@@ -65,9 +73,11 @@ class Vehicle {
 
   int preferred_buffer = 6; // impacts "keep lane" behavior.
 
-  int lane, s, goal_lane, goal_s, lanes_available;
+  int lane, goal_lane, goal_s, lanes_available;
 
   float v, target_speed, a, max_acceleration;
+
+  float s, d, x, y, yaw;
 
   string state;
 };

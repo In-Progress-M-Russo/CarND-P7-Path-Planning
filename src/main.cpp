@@ -6,17 +6,16 @@
 #include <map>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
-#include "helpers.h"
 #include "json.hpp"
-#include "spline.h"
-#include "cost.h"
 #include "vehicle.h"
+
 
 // for convenience
 using nlohmann::json;
 using std::string;
 using std::vector;
 using std::map;
+
 
 int main() {
   uWS::Hub h;
@@ -107,8 +106,8 @@ int main() {
           std::cout << "****************************************** "<< std::endl;
           // Previous path data given to the Planner and NOT yet executed by
           // the car
-          auto previous_path_x = j[1]["previous_path_x"];
-          auto previous_path_y = j[1]["previous_path_y"];
+          vector<double> previous_path_x = j[1]["previous_path_x"];
+          vector<double> previous_path_y = j[1]["previous_path_y"];
           // Previous path's end s and d values
           double end_path_s = j[1]["end_path_s"];
           double end_path_d = j[1]["end_path_d"];
@@ -125,9 +124,13 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+          // Vectors containing old trajectory
+          //vector<double> past_x_vals;
+          //vector<double> past_y_vals;
+
           // Parameters to be used in following calculations:
           // Lane width: lane considered 4 meters wide
-          float lane_width = 4;
+          float lane_width = 4.0;
           // Sampling interval
           float delta_t = 0.02;
 
@@ -135,17 +138,16 @@ int main() {
           // This will depend on how much of the previous planned path the car
           // has covered in the 0.02 seconds between simulator steps, that in
           // turn is a function of the car's speed
-          int prev_size = previous_path_x.size();
 
           // In case we have something from previous run, change car_s to be at
           // the end of the previous path
-          if (prev_size>0){
+          if (previous_path_x.size()>0){
             car_s = end_path_s;
           }
 
           // Maps to be filled with the vehicles in the scene and their possible trajectories
           map<int, Vehicle> vehicles;
-          map<int ,vector<Vehicle> > predictions;
+          // map<int ,vector<Vehicle> > predictions;
 
           // ===================================================================
           // CREATION OF AN EGO VEHICLE OBJECT
@@ -163,7 +165,7 @@ int main() {
           // Instantiation of the ego vehicle object
           // NOTE1: speed from msg is in mph
           // NOTE2: vehicle's acceleration is assumed = 0
-          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_speed*0.44704,0);
+          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_d,car_speed*0.44704,0,car_x,car_y,car_yaw);
 
           // Setting of the current state
           ego_vehicle.state = ego_state;
@@ -187,6 +189,8 @@ int main() {
 
               // Create a vehicle object for every vehicle in sensor fusion
               // Read sensed coordinates/velocity
+              float sensed_x  = sensor_fusion[l][1];
+              float sensed_y  = sensor_fusion[l][2];
               float sensed_vx  = sensor_fusion[l][3];
               float sensed_vy  = sensor_fusion[l][4];
               float sensed_s  = sensor_fusion[l][5];
@@ -206,8 +210,11 @@ int main() {
               // Calculate the magnitude of the speed
               float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
 
+              // calculate yaw
+              float sensed_yaw = atan2(sensed_vy,sensed_vx);
+
               // Create vehicle object from current data
-              Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_speed,0);
+              Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_d,sensed_speed,0,sensed_x,sensed_y,sensed_yaw);
 
               // Set a state, assuming constant speed
               vehicle.state = "CS";
@@ -218,19 +225,19 @@ int main() {
 
               // Create predicted trajectory
               // NOTE: default horizon = 2 s
-              vector<Vehicle> preds = vehicle.generate_predictions();
-              predictions[vehicles_added] = preds;
+              // vector<Vehicle> preds = vehicle.generate_predictions();
+              // predictions[vehicles_added] = preds;
             }
 
             // 2. Change Ego state based on predictions
 
-            vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
-            ego_vehicle.realize_next_state(trajectory);
-
-            ego_state = ego_vehicle.state;
-            lane = ego_vehicle.lane;
-            std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
-            std::cout << "Lane Vehicle after predictions: "<< lane << std::endl;
+            // vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
+            // ego_vehicle.realize_next_state(trajectory);
+            //
+            // ego_state = ego_vehicle.state;
+            // lane = ego_vehicle.lane;
+            // std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
+            // std::cout << "Lane Vehicle after predictions: "<< lane << std::endl;
           }
 
           // ===================================================================
@@ -240,7 +247,7 @@ int main() {
 
           // *************************************
           // DUMMY
-          // ego_state = "KL";
+          ego_state = "KL";
           // *************************************
 
           if (ego_state == "KL"){
@@ -269,7 +276,7 @@ int main() {
 
                 // Where will the car be at the end of the path previously planned
                 // considering constant velocity and sampling interval
-                check_car_s +=((double)prev_size*delta_t*check_speed);
+                check_car_s +=((double)previous_path_x.size()*delta_t*check_speed);
 
                 // Compare the distance between this predicted position and the
                 // position of the ego. Compare with a given threshold
@@ -304,99 +311,11 @@ int main() {
           //====================================================================
           // TRAJ GENERATION
           //====================================================================
-          // Initialize  trajectory with previous path]
-          //
-          for (int i = 0; i < prev_size; ++i) {
-            next_x_vals.push_back(previous_path_x[i]);
-            next_y_vals.push_back(previous_path_y[i]);
-          }
 
           //====================================================================
-          // generate anchor points
 
-          // vectors of sparse points to intepolate using spline
-          vector<double> ptsx;
-          vector<double> ptsy;
-
-          // reference state for the car
-          double ref_x = car_x;
-          double ref_y = car_y;
-          double ref_yaw = deg2rad(car_yaw);
-
-          // past points
-          if (prev_size<2){
-              ptsx.push_back(car_x);
-              ptsy.push_back(car_y);
-          }
-          else {
-            ref_x = previous_path_x[prev_size - 1];
-            ref_y = previous_path_y[prev_size - 1];
-
-            double ref_x_prev = previous_path_x[prev_size - 2];
-            double ref_y_prev = previous_path_y[prev_size - 2];
-            ref_yaw = atan2(ref_y - ref_y_prev,ref_x - ref_x_prev);
-
-            ptsx.push_back(ref_x_prev);
-            ptsx.push_back(ref_x);
-
-            ptsy.push_back(ref_y_prev);
-            ptsy.push_back(ref_y);
-          }
-
-          // future points
-          vector<double> next_wp0 = getXY(car_s + 30,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-          vector<double> next_wp1 = getXY(car_s + 60,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-          vector<double> next_wp2 = getXY(car_s + 90,((lane_width/2)+lane_width*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-
-          ptsx.push_back(next_wp0[0]);
-          ptsx.push_back(next_wp1[0]);
-          ptsx.push_back(next_wp2[0]);
-
-          ptsy.push_back(next_wp0[1]);
-          ptsy.push_back(next_wp1[1]);
-          ptsy.push_back(next_wp2[1]);
-
-          // shift in car's ref frame
-          for(int i = 0; i<ptsx.size(); i++){
-            double shift_x = ptsx[i] - ref_x;
-            double shift_y = ptsy[i] - ref_y;
-
-            ptsx[i] = (shift_x * cos(0 - ref_yaw) - shift_y * sin(0 - ref_yaw));
-            ptsy[i] = (shift_x * sin(0 - ref_yaw) + shift_y * cos(0 - ref_yaw));
-          }
-
-          // generate a spline
-          tk::spline s;
-          s.set_points(ptsx,ptsy);
-
-          //respace according to target vel
-          double target_x = 30.0;
-          double target_y = s(target_x);
-          double target_distance = distance(0,0,target_x,target_y);
-
-          double x_add_on = 0;
-
-          // add them to path
-          for (int i = 1; i <= 50 - prev_size; i++){
-
-            double N = target_distance/(delta_t*ref_vel/2.24);
-            double x_point = x_add_on + target_x/N;
-            double y_point = s(x_point);
-
-            x_add_on = x_point;
-
-            double x_ref = x_point;
-            double y_ref = y_point;
-
-            x_point = (x_ref * cos(ref_yaw) - y_ref * sin(ref_yaw));
-            y_point = (x_ref * sin(ref_yaw) + y_ref * cos(ref_yaw));
-
-            x_point += ref_x;
-            y_point += ref_y;
-
-            next_x_vals.push_back(x_point);
-            next_y_vals.push_back(y_point);
-          }
+          ego_vehicle.generateTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y, map_waypoints_s, map_waypoints_x, map_waypoints_y, delta_t,
+                         ref_vel, lane, lane_width);
 
 
           msgJson["next_x"] = next_x_vals;
