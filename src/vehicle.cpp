@@ -131,6 +131,65 @@ void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &ne
   }
 }
 
+
+void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
+  vector<double> &previous_path_x, float delta_t, bool &init_acc_over) {
+
+  // First of all let's check if there's a chance of getting too close
+  // to other cars while keeping this lane, and adapt velocity
+  bool too_close = false;
+
+  // Counter
+  //int i = 0;
+
+  for (map<int, Vehicle>::iterator it = vehicles.begin(); it != vehicles.end();
+    ++it) {
+    // Loop over vehicles
+    // to find a vehicle which is in the same lane as ego AND too close
+
+    // Get d for the vehicle
+    int ln = it->second.lane;
+
+    // Check if there's a car in the ego lane
+    if (ln == this->lane){
+      // there is a car in the same lane as ego: calculate its velocity
+      double check_speed = it->second.v;
+
+      // check its position, starting from current s
+      double check_car_s = it->second.s;
+
+      // Where will the car be at the end of the path previously planned
+      // considering constant velocity and sampling interval
+      check_car_s +=((double)previous_path_x.size()*delta_t*check_speed);
+
+      // Compare the distance between this predicted position and the
+      // position of the ego. Compare with a given threshold
+      if((check_car_s > this->s) && ((check_car_s - this->s) < 30)){
+
+        too_close = true;
+      }
+    }
+  }
+
+  // if we're too close slow down
+  if (too_close == true){
+    std::__1::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
+    ref_vel -= 0.224;
+  }
+  else if (ref_vel < 49.5){
+    std::__1::cout << "ACCELERATING" << '\n';
+    ref_vel+= 0.224;
+  }
+  else{
+    if (init_acc_over == false){
+      std::__1::cout << "OVER INIT ACC" << '\n';
+      init_acc_over = true;
+    }
+    std::__1::cout << "MAINTANING SPEED" << '\n';
+  }
+}
+
+
 //
 // vector<Vehicle> Vehicle::choose_next_state(map<int, vector<Vehicle>> &predictions) {
 //   /**

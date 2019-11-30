@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <iterator>
 #include <map>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
@@ -15,7 +16,6 @@ using nlohmann::json;
 using std::string;
 using std::vector;
 using std::map;
-
 
 int main() {
   uWS::Hub h;
@@ -124,20 +124,11 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          // Vectors containing old trajectory
-          //vector<double> past_x_vals;
-          //vector<double> past_y_vals;
-
           // Parameters to be used in following calculations:
           // Lane width: lane considered 4 meters wide
           float lane_width = 4.0;
           // Sampling interval
           float delta_t = 0.02;
-
-          // Size of what's left of the previos path
-          // This will depend on how much of the previous planned path the car
-          // has covered in the 0.02 seconds between simulator steps, that in
-          // turn is a function of the car's speed
 
           // In case we have something from previous run, change car_s to be at
           // the end of the previous path
@@ -251,61 +242,7 @@ int main() {
           // *************************************
 
           if (ego_state == "KL"){
-            // First of all let's check if there's a chance of getting too close
-            // to other cars while keeping this lane, and adapt velocity
-            bool too_close = false;
-
-            // Counter
-            int i = 0;
-
-            // Loop over sensor_fusion
-            // until you find a vehicle which is in the same lane as ego AND too close
-            while ((too_close == false) && (i<sensor_fusion.size())){
-              // Get d for the vehicle
-              float d = sensor_fusion[i][6];
-
-              // Check if there's a car in the ego lane
-              if (d < (lane_width+lane_width*lane) && d > (lane_width*lane)){
-                // there is a car in the same lane as ego: calculate its velocity
-                double vx = sensor_fusion[i][3];
-                double vy = sensor_fusion[i][4];
-                double check_speed = sqrt(vx*vx + vy*vy);
-
-                // check its position, starting from current s
-                double check_car_s = sensor_fusion[i][5];
-
-                // Where will the car be at the end of the path previously planned
-                // considering constant velocity and sampling interval
-                check_car_s +=((double)previous_path_x.size()*delta_t*check_speed);
-
-                // Compare the distance between this predicted position and the
-                // position of the ego. Compare with a given threshold
-                if((check_car_s > car_s) && ((check_car_s - car_s) < 30)){
-
-                  too_close = true;
-                }
-              }
-
-              // Increment counter
-              i++;
-            }
-
-            // if we're too close slow down
-            if (too_close == true){
-              std::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
-              ref_vel -= 0.224;
-            }
-            else if (ref_vel < 49.5){
-              std::cout << "ACCELERATING" << '\n';
-              ref_vel+= 0.224;
-            }
-            else{
-              if (init_acc_over == false){
-                std::cout << "OVER INIT ACC" << '\n';
-                init_acc_over = true;
-              }
-              std::cout << "MAINTANING SPEED" << '\n';
-            }
+            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, delta_t, init_acc_over);
           }
 
           //====================================================================
