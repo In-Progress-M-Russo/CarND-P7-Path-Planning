@@ -23,7 +23,7 @@ class Vehicle {
   // Vehicle functions
   // vector<Vehicle> choose_next_state(map<int, vector<Vehicle>> &predictions);
   //
-  // vector<string> successor_states();
+  vector<string> successor_states();
   //
   // vector<Vehicle> generate_trajectory(string state,
   //                                     map<int, vector<Vehicle>> &predictions);
@@ -50,7 +50,10 @@ class Vehicle {
   // bool get_vehicle_ahead(map<int, vector<Vehicle>> &predictions, int lane,
   //                        Vehicle &rVehicle);
   //
-  // vector<Vehicle> generate_predictions(int horizon=2);
+
+  
+  vector<Vehicle> generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
+                          const vector<double> &map_y_waypoints,int length, float dt);
 
   // void realize_next_state(vector<Vehicle> &trajectory);
 
@@ -59,7 +62,7 @@ class Vehicle {
                           const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
                           float dt, double r_vel, int v_lane, float v_lane_width);
 
-  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, float delta_t, bool &init_acc_over); 
+  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, float delta_t, bool &init_acc_over);
 
   // public Vehicle variables
   struct collider{

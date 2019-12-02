@@ -139,9 +139,6 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
   // to other cars while keeping this lane, and adapt velocity
   bool too_close = false;
 
-  // Counter
-  //int i = 0;
-
   for (map<int, Vehicle>::iterator it = vehicles.begin(); it != vehicles.end();
     ++it) {
     // Loop over vehicles
@@ -173,11 +170,11 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
   // if we're too close slow down
   if (too_close == true){
-    std::__1::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
+    std::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
     ref_vel -= 0.224;
   }
   else if (ref_vel < 49.5){
-    std::__1::cout << "ACCELERATING" << '\n';
+    std::cout << "ACCELERATING" << '\n';
     ref_vel+= 0.224;
   }
   else{
@@ -185,7 +182,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
       std::__1::cout << "OVER INIT ACC" << '\n';
       init_acc_over = true;
     }
-    std::__1::cout << "MAINTANING SPEED" << '\n';
+    std::cout << "MAINTANING SPEED" << '\n';
   }
 }
 
@@ -241,31 +238,44 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 //   return final_trajectories[best_idx];
 // }
 //
-// vector<string> Vehicle::successor_states() {
-//   // Provides the possible next states given the current state for the FSM
-//   //   discussed in the course, with the exception that v_lane changes happen
-//   //   instantaneously, so LCL and LCR can only transition back to KL.
-//   vector<string> states;
-//   states.push_back("KL");
-//   string state = this->state;
-//   if(state.compare("KL") == 0) {
-//     states.push_back("PLCL");
-//     states.push_back("PLCR");
-//   } else if (state.compare("PLCL") == 0) {
-//     if (v_lane != v_lanes_available - 1) {
-//       states.push_back("PLCL");
-//       states.push_back("LCL");
-//     }
-//   } else if (state.compare("PLCR") == 0) {
-//     if (v_lane != 0) {
-//       states.push_back("PLCR");
-//       states.push_back("LCR");
-//     }
-//   }
-//
-//   // If state is "LCL" or "LCR", then just return "KL"
-//   return states;
-// }
+vector<string> Vehicle::successor_states() {
+  // Provides the possible next states given the current state for the FSM
+  //   discussed in the course,
+  vector<string> states;
+
+  states.push_back("KL");
+
+  string state = this->state;
+
+  if(state.compare("KL") == 0) {
+    states.push_back("PLCL");
+    states.push_back("PLCR");
+  }
+  else if (state.compare("PLCL") == 0) {
+    if (lane != lanes_available - 1) {
+      states.push_back("PLCL");
+      states.push_back("LCL");
+    }
+  }
+  else if (state.compare("PLCR") == 0) {
+    if (lane != 0) {
+      states.push_back("PLCR");
+      states.push_back("LCR");
+    }
+  }
+  else if (state.compare("LCL") == 0) {
+    if (lane != lanes_available - 1) {
+      states.push_back("LCL");
+    }
+  }
+  else if (state.compare("LCR") == 0) {
+    if (lane != 0) {
+      states.push_back("LCR");
+    }
+  }
+
+  return states;
+}
 //
 // vector<Vehicle> Vehicle::generate_trajectory(string state,
 //                                              map<int, vector<Vehicle>> &predictions) {
@@ -452,21 +462,27 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 //   return found_vehicle;
 // }
 //
-// vector<Vehicle> Vehicle::generate_predictions(int horizon) {
-//   // Generates predictions for non-ego vehicles to be used in trajectory
-//   //   generation for the ego vehicle.
-//   vector<Vehicle> predictions;
-//   for(int i = 0; i < horizon; ++i) {
-//     float next_s = position_at(i);
-//     float next_v = 0;
-//     if (i < horizon-1) {
-//       next_v = position_at(i+1) - s;
-//     }
-//     predictions.push_back(Vehicle(this->v_lane, next_s, next_v, 0));
-//   }
-//
-//   return predictions;
-// }
+
+vector<Vehicle> Vehicle::generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
+   const vector<double> &map_y_waypoints,int length, float dt) {
+  // Generates predictions for non-ego vehicles to be used in trajectory
+  //   generation for the ego vehicle.
+  // Hyp: constant speed for the length of the trajectory
+
+  vector<Vehicle> predictions;
+  float curr_s = this->s;
+  for(int i = 0; i < length; ++i) {
+    float next_s = curr_s + this->v * dt;
+    vector<double> next_xy = getXY(next_s,this->d,map_s_waypoints,map_x_waypoints,map_y_waypoints);
+    // std::cout << "Trajectory - s: " << next_s << ", v: "<< this->v << ", x: "<< next_xy[0] << ", y: " << next_xy[1]<<std::endl;
+    // NOTE: Yaw is not considered for these trajectories
+    predictions.push_back(Vehicle(this->lane, next_s, this->d, this->v, 0, next_xy[0], next_xy[1],-1,"CS"));
+    curr_s = next_s;
+  }
+
+
+  return predictions;
+}
 //
 // void Vehicle::realize_next_state(vector<Vehicle> &trajectory) {
 //   // Sets state and kinematics for ego vehicle using the last state of the trajectory.

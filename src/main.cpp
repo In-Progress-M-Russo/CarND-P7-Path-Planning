@@ -138,7 +138,7 @@ int main() {
 
           // Maps to be filled with the vehicles in the scene and their possible trajectories
           map<int, Vehicle> vehicles;
-          // map<int ,vector<Vehicle> > predictions;
+          map<int ,vector<Vehicle> > predictions;
 
           // ===================================================================
           // CREATION OF AN EGO VEHICLE OBJECT
@@ -164,6 +164,9 @@ int main() {
           // Setting of the goals in terms of distance to reach and speed to maintain
           ego_vehicle.goal_s = max_s;
           ego_vehicle.target_speed = ref_vel*0.44704;
+
+          // Setting the number of lanes
+          ego_vehicle.lanes_available = 3;
 
           // ===================================================================
           // FINITE STATE MACHINE
@@ -210,14 +213,18 @@ int main() {
               // Set a state, assuming constant speed
               vehicle.state = "CS";
 
+              // Setting the number of lanes
+              vehicle.lanes_available = 3;
+
               // Insert vehicles in the map
               vehicles_added += 1;
               vehicles.insert(std::pair<int,Vehicle>(vehicles_added,vehicle));
 
               // Create predicted trajectory
               // NOTE: default horizon = 2 s
-              // vector<Vehicle> preds = vehicle.generate_predictions();
-              // predictions[vehicles_added] = preds;
+              int pred_path_length = 30;
+              vector<Vehicle> preds = vehicle.generate_predictions(map_waypoints_s, map_waypoints_x, map_waypoints_y, pred_path_length, delta_t);
+              predictions[vehicles_added] = preds;
             }
 
             // 2. Change Ego state based on predictions
