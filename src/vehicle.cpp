@@ -133,7 +133,7 @@ void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &ne
 
 
 void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
-  vector<double> &previous_path_x, float delta_t, bool &init_acc_over) {
+  vector<double> &previous_path_x, DELTA_T, bool &init_acc_over) {
 
   // First of all let's check if there's a chance of getting too close
   // to other cars while keeping this lane, and adapt velocity

@@ -1,6 +1,11 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+// CONSTANTS
+const float DELTA_T = 0.02;
+const float LANE_WIDTH = 4.0;
+
+
 #include <math.h>
 #include <string>
 #include <vector>

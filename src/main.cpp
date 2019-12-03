@@ -126,9 +126,9 @@ int main() {
 
           // Parameters to be used in following calculations:
           // Lane width: lane considered 4 meters wide
-          float lane_width = 4.0;
+          //float lane_width = 4.0;
           // Sampling interval
-          float delta_t = 0.02;
+          //float delta_t = 0.02;
 
           // In case we have something from previous run, change car_s to be at
           // the end of the previous path
@@ -145,9 +145,9 @@ int main() {
           // Definition of the ego lane
           int sensed_ego_lane;
 
-          if ((car_d >= 0.0) && (car_d < lane_width)){
+          if ((car_d >= 0.0) && (car_d < LANE_WIDTH)){
             sensed_ego_lane = 0;
-          } else if ((car_d >= lane_width) && (car_d < 2*lane_width)){
+          } else if ((car_d >= LANE_WIDTH) && (car_d < 2*LANE_WIDTH)){
             sensed_ego_lane = 1;
           } else {
             sensed_ego_lane = 2;
@@ -193,9 +193,9 @@ int main() {
               // Define a lane for the vehicle
               int sensed_lane;
 
-              if ((sensed_d >= 0.0) && (sensed_d < lane_width)){
+              if ((sensed_d >= 0.0) && (sensed_d < LANE_WIDTH)){
                 sensed_lane = 0;
-              } else if ((sensed_d >= lane_width) && (sensed_d < 2*lane_width)){
+              } else if ((sensed_d >= LANE_WIDTH) && (sensed_d < 2*LANE_WIDTH)){
                 sensed_lane = 1;
               } else {
                 sensed_lane = 2;
@@ -223,7 +223,8 @@ int main() {
               // Create predicted trajectory
               // NOTE: default horizon = 2 s
               int pred_path_length = 30;
-              vector<Vehicle> preds = vehicle.generate_predictions(map_waypoints_s, map_waypoints_x, map_waypoints_y, pred_path_length, delta_t);
+              vector<Vehicle> preds = vehicle.generate_predictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
+                pred_path_length, DELTA_T);
               predictions[vehicles_added] = preds;
             }
 
@@ -249,7 +250,7 @@ int main() {
           // *************************************
 
           if (ego_state == "KL"){
-            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, delta_t, init_acc_over);
+            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, DELTA_T, init_acc_over);
           }
 
           //====================================================================
@@ -258,9 +259,8 @@ int main() {
 
           //====================================================================
 
-          ego_vehicle.generateTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y, map_waypoints_s, map_waypoints_x, map_waypoints_y, delta_t,
-                         ref_vel, lane, lane_width);
-
+          ego_vehicle.generateTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+            map_waypoints_s, map_waypoints_x, map_waypoints_y, DELTA_T, ref_vel, lane, LANE_WIDTH);
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
