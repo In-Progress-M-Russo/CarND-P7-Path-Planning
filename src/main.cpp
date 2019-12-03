@@ -224,7 +224,7 @@ int main() {
               // NOTE: default horizon = 2 s
               int pred_path_length = 30;
               vector<Vehicle> preds = vehicle.generate_predictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
-                pred_path_length, DELTA_T);
+                pred_path_length);
               predictions[vehicles_added] = preds;
             }
 
@@ -250,7 +250,7 @@ int main() {
           // *************************************
 
           if (ego_state == "KL"){
-            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, DELTA_T, init_acc_over);
+            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, init_acc_over);
           }
 
           //====================================================================
@@ -260,7 +260,7 @@ int main() {
           //====================================================================
 
           ego_vehicle.generateTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y,
-            map_waypoints_s, map_waypoints_x, map_waypoints_y, DELTA_T, ref_vel, lane, LANE_WIDTH);
+            map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane);
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

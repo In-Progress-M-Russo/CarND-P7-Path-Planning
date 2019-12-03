@@ -30,7 +30,7 @@ Vehicle::~Vehicle() {}
 
 void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
                         const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
-                        float dt, double r_vel, int v_lane, float v_lane_width) {
+                        double r_vel, int v_lane) {
 
 
   double car_x = this->x;
@@ -76,9 +76,9 @@ void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &ne
     }
 
   // future points
-  vector<double> next_wp0 = getXY(car_s + 30,((v_lane_width/2)+v_lane_width*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
-  vector<double> next_wp1 = getXY(car_s + 60,((v_lane_width/2)+v_lane_width*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
-  vector<double> next_wp2 = getXY(car_s + 90,((v_lane_width/2)+v_lane_width*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp0 = getXY(car_s + 30,((LANE_WIDTH/2)+LANE_WIDTH*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp1 = getXY(car_s + 60,((LANE_WIDTH/2)+LANE_WIDTH*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp2 = getXY(car_s + 90,((LANE_WIDTH/2)+LANE_WIDTH*v_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
 
   ptsx.push_back(next_wp0[0]);
   ptsx.push_back(next_wp1[0]);
@@ -111,7 +111,7 @@ void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &ne
   // add them to path
   for (int i = 1; i <= 50 - previous_x_path.size(); i++){
 
-    double N = target_distance/(dt*r_vel/2.24);
+    double N = target_distance/(DELTA_T*r_vel/2.24);
     double x_point = x_add_on + target_x/N;
     double y_point = s(x_point);
 
@@ -133,7 +133,7 @@ void Vehicle::generateTrajectory(vector<double> &next_vals_x, vector<double> &ne
 
 
 void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
-  vector<double> &previous_path_x, DELTA_T, bool &init_acc_over) {
+  vector<double> &previous_path_x, bool &init_acc_over) {
 
   // First of all let's check if there's a chance of getting too close
   // to other cars while keeping this lane, and adapt velocity
@@ -157,7 +157,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
       // Where will the car be at the end of the path previously planned
       // considering constant velocity and sampling interval
-      check_car_s +=((double)previous_path_x.size()*delta_t*check_speed);
+      check_car_s +=((double)previous_path_x.size()*DELTA_T*check_speed);
 
       // Compare the distance between this predicted position and the
       // position of the ego. Compare with a given threshold
@@ -464,7 +464,7 @@ vector<string> Vehicle::successor_states() {
 //
 
 vector<Vehicle> Vehicle::generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
-   const vector<double> &map_y_waypoints,int length, float dt) {
+   const vector<double> &map_y_waypoints,int length) {
   // Generates predictions for non-ego vehicles to be used in trajectory
   //   generation for the ego vehicle.
   // Hyp: constant speed for the length of the trajectory
@@ -472,7 +472,7 @@ vector<Vehicle> Vehicle::generate_predictions(const vector<double> &map_s_waypoi
   vector<Vehicle> predictions;
   float curr_s = this->s;
   for(int i = 0; i < length; ++i) {
-    float next_s = curr_s + this->v * dt;
+    float next_s = curr_s + this->v * DELTA_T;
     vector<double> next_xy = getXY(next_s,this->d,map_s_waypoints,map_x_waypoints,map_y_waypoints);
     // std::cout << "Trajectory - s: " << next_s << ", v: "<< this->v << ", x: "<< next_xy[0] << ", y: " << next_xy[1]<<std::endl;
     // NOTE: Yaw is not considered for these trajectories

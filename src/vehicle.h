@@ -51,18 +51,18 @@ class Vehicle {
   //                        Vehicle &rVehicle);
   //
 
-  
+
   vector<Vehicle> generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
-                          const vector<double> &map_y_waypoints,int length, float dt);
+                          const vector<double> &map_y_waypoints,int length);
 
   // void realize_next_state(vector<Vehicle> &trajectory);
 
   //
   void generateTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
                           const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
-                          float dt, double r_vel, int v_lane, float v_lane_width);
+                          double r_vel, int v_lane);
 
-  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, float delta_t, bool &init_acc_over);
+  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
 
   // public Vehicle variables
   struct collider{
