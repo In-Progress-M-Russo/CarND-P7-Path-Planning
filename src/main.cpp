@@ -124,12 +124,6 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          // Parameters to be used in following calculations:
-          // Lane width: lane considered 4 meters wide
-          //float lane_width = 4.0;
-          // Sampling interval
-          //float delta_t = 0.02;
-
           // In case we have something from previous run, change car_s to be at
           // the end of the previous path
           if (previous_path_x.size()>0){
@@ -156,14 +150,14 @@ int main() {
           // Instantiation of the ego vehicle object
           // NOTE1: speed from msg is in mph
           // NOTE2: vehicle's acceleration is assumed = 0
-          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_d,car_speed*0.44704,0,car_x,car_y,car_yaw);
+          Vehicle ego_vehicle = Vehicle(sensed_ego_lane,car_s,car_d,car_speed*MPH2MS,0,car_x,car_y,car_yaw);
 
           // Setting of the current state
           ego_vehicle.state = ego_state;
 
           // Setting of the goals in terms of distance to reach and speed to maintain
           ego_vehicle.goal_s = max_s;
-          ego_vehicle.target_speed = ref_vel*0.44704;
+          ego_vehicle.target_speed = ref_vel*MPH2MS;
 
           // Setting the number of lanes
           ego_vehicle.lanes_available = 3;

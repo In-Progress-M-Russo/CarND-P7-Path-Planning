@@ -144,7 +144,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
     // Loop over vehicles
     // to find a vehicle which is in the same lane as ego AND too close
 
-    // Get d for the vehicle
+    // Get lane for the vehicle
     int ln = it->second.lane;
 
     // Check if there's a car in the ego lane
@@ -179,7 +179,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
   }
   else{
     if (init_acc_over == false){
-      std::__1::cout << "OVER INIT ACC" << '\n';
+      std::cout << "OVER INIT ACC" << '\n';
       init_acc_over = true;
     }
     std::cout << "MAINTANING SPEED" << '\n';
@@ -248,20 +248,8 @@ vector<string> Vehicle::successor_states() {
   string state = this->state;
 
   if(state.compare("KL") == 0) {
-    states.push_back("PLCL");
-    states.push_back("PLCR");
-  }
-  else if (state.compare("PLCL") == 0) {
-    if (lane != lanes_available - 1) {
-      states.push_back("PLCL");
-      states.push_back("LCL");
-    }
-  }
-  else if (state.compare("PLCR") == 0) {
-    if (lane != 0) {
-      states.push_back("PLCR");
-      states.push_back("LCR");
-    }
+    states.push_back("LCL");
+    states.push_back("LCR");
   }
   else if (state.compare("LCL") == 0) {
     if (lane != lanes_available - 1) {
@@ -273,6 +261,34 @@ vector<string> Vehicle::successor_states() {
       states.push_back("LCR");
     }
   }
+
+
+  // if(state.compare("KL") == 0) {
+  //   states.push_back("PLCL");
+  //   states.push_back("PLCR");
+  // }
+  // else if (state.compare("PLCL") == 0) {
+  //   if (lane != lanes_available - 1) {
+  //     states.push_back("PLCL");
+  //     states.push_back("LCL");
+  //   }
+  // }
+  // else if (state.compare("PLCR") == 0) {
+  //   if (lane != 0) {
+  //     states.push_back("PLCR");
+  //     states.push_back("LCR");
+  //   }
+  // }
+  // else if (state.compare("LCL") == 0) {
+  //   if (lane != lanes_available - 1) {
+  //     states.push_back("LCL");
+  //   }
+  // }
+  // else if (state.compare("LCR") == 0) {
+  //   if (lane != 0) {
+  //     states.push_back("LCR");
+  //   }
+  // }
 
   return states;
 }
@@ -464,7 +480,7 @@ vector<string> Vehicle::successor_states() {
 //
 
 vector<Vehicle> Vehicle::generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
-   const vector<double> &map_y_waypoints,int length) {
+   const vector<double> &map_y_waypoints, int length) {
   // Generates predictions for non-ego vehicles to be used in trajectory
   //   generation for the ego vehicle.
   // Hyp: constant speed for the length of the trajectory
