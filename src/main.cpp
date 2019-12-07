@@ -166,7 +166,6 @@ int main() {
           // FINITE STATE MACHINE
 
           // Get in it only if the initial acceleration phase is over
-          if (init_acc_over == true){
 
             // 1. Create maps for vehicles and trajectories
 
@@ -217,21 +216,23 @@ int main() {
               // Create predicted trajectory
               // NOTE: default horizon = 2 s
               int pred_path_length = 30;
-              vector<Vehicle> preds = vehicle.generate_predictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
+              vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
                 pred_path_length);
               predictions[vehicles_added] = preds;
             }
 
             // 2. Change Ego state based on predictions
 
-            // vector<Vehicle> trajectory = ego_vehicle.choose_next_state(predictions);
+              ego_vehicle.implementNextTrajectory(vehicles, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+                                                  map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane,
+                                                  init_acc_over);
             // ego_vehicle.realize_next_state(trajectory);
             //
             // ego_state = ego_vehicle.state;
             // lane = ego_vehicle.lane;
             // std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
             // std::cout << "Lane Vehicle after predictions: "<< lane << std::endl;
-          }
+
 
           // ===================================================================
           // UPDATE REF VELOCITY in case of KL state
@@ -240,21 +241,21 @@ int main() {
 
           // *************************************
           // DUMMY
-          ego_state = "KL";
-          // *************************************
-
-          if (ego_state == "KL"){
-            ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, init_acc_over);
-          }
-
-          //====================================================================
-          // TRAJ GENERATION
-          //====================================================================
-
-          //====================================================================
-
-          ego_vehicle.generateTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y,
-            map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane);
+          // ego_state = "KL";
+          // // *************************************
+          //
+          // if (ego_state == "KL"){
+          //   ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, init_acc_over);
+          // }
+          //
+          // //====================================================================
+          // // TRAJ GENERATION
+          // //====================================================================
+          //
+          // //====================================================================
+          //
+          // ego_vehicle.generateXYTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+          //   map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane);
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

@@ -21,11 +21,16 @@ class Vehicle {
   virtual ~Vehicle();
 
   // Vehicle functions
-  // vector<Vehicle> choose_next_state(map<int, vector<Vehicle>> &predictions);
+  void implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double> &next_vals_x, vector<double> &next_vals_y,
+                               vector<double> &previous_x_path,
+                               vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
+                               const vector<double> &map_x_waypoints,
+                               const vector<double> &map_y_waypoints, double &r_vel, int current_lane,
+                               bool &init_acc_over);
   //
-  vector<string> successor_states();
+  vector<string> successorStates();
   //
-  // vector<Vehicle> generate_trajectory(string state,
+  //vector<Vehicle> generateTrajectory(string state,
   //                                     map<int, vector<Vehicle>> &predictions);
   //
   // vector<float> get_kinematics(map<int, vector<Vehicle>> &predictions, int lane);
@@ -52,15 +57,15 @@ class Vehicle {
   //
 
 
-  vector<Vehicle> generate_predictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
+  vector<Vehicle> generatePredictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
                           const vector<double> &map_y_waypoints,int length);
 
   // void realize_next_state(vector<Vehicle> &trajectory);
 
   //
-  void generateTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
+  void generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
                           const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
-                          double r_vel, int v_lane);
+                          double r_vel, int target_lane);
 
   void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
 
