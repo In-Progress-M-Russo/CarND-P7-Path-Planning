@@ -223,7 +223,7 @@ int main() {
 
             // 2. Change Ego state based on predictions
 
-              ego_vehicle.implementNextTrajectory(vehicles, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+            ego_vehicle.implementNextTrajectory(vehicles, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
                                                   map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane,
                                                   init_acc_over);
             // ego_vehicle.realize_next_state(trajectory);

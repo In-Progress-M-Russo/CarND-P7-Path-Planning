@@ -128,6 +128,7 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
 
     next_vals_x.push_back(x_point);
     next_vals_y.push_back(y_point);
+    //std::cout<< "Traj x,y = "<< x_point << " , "<<y_point<<std::endl;
   }
 }
 
@@ -216,50 +217,80 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double
    */
   vector<string> states = successorStates();
 
-//  double current_vel = r_vel;
-//  vector<double> genericTrajX;
-//  vector<double> genericTrajY;
+  map<int ,vector<double> > genericTrajsX;
+  map<int ,vector<double> > genericTrajsY;
 
 
   for(int l = 0; l< states.size(); l++){
     std::cout << "Possible successor state = " << states[l] << std::endl;
   }
 
-  // float cost;
-  // vector<float> costs;
-  // vector<vector<Vehicle>> final_trajectories;
+  vector<double> KLTrajX;
+  vector<double> KLTrajY;
+  vector<double> LCLTrajX;
+  vector<double> LCLTrajY;
+  vector<double> LCRTrajX;
+  vector<double> LCRTrajY;
+
+  double current_KL_vel = r_vel;
+
   //
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
-      regulateVelocity(vehicles, r_vel, previous_x_path, init_acc_over);
+      std::cout<< "KL Traj"<< std::endl;
+      regulateVelocity(vehicles, current_KL_vel, previous_x_path, init_acc_over);
       //
-      generateXYTrajectory(next_vals_x, next_vals_y, previous_x_path, previous_y_path,
-      map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, current_lane);
+      generateXYTrajectory(KLTrajX, KLTrajY, previous_x_path, previous_y_path,
+                           map_s_waypoints, map_x_waypoints, map_y_waypoints, current_KL_vel, current_lane);
+
+      genericTrajsX[0] = KLTrajX;
+      genericTrajsY[0] = KLTrajY;
     }
     else if (it->compare("LCL") ==0)
     {
+      std::cout<< "LCL Traj"<< std::endl;
+      if (current_lane>0) {
+        int target_lane = current_lane - 1;
+        generateXYTrajectory(LCLTrajX, LCLTrajY, previous_x_path, previous_y_path,
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+      }
 
+      genericTrajsX[1] = LCLTrajX;
+      genericTrajsY[1] = LCLTrajY;
     }
     else if (it->compare("LCR") == 0)
     {
+      std::cout<< "LCR Traj"<< std::endl;
+      if (current_lane<2){
+        int target_lane = current_lane + 1;
+        generateXYTrajectory(LCRTrajX, LCRTrajY, previous_x_path, previous_y_path,
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+      }
 
+      genericTrajsX[2] = LCRTrajX;
+      genericTrajsY[2] = LCRTrajY;
     }
-  //
-  //   if (trajectory.size() != 0) {
-  //     cost = calculate_cost(*this, predictions, trajectory);
-  //
-  //     std::cout << "Trajectory Cost = " << cost << std::endl;
-  //
-  //     costs.push_back(cost);
-  //     final_trajectories.push_back(trajectory);
-  //   }
+
+    // TODO: Calculate a cost
+
   }
 
-  // vector<float>::iterator best_cost = min_element(begin(costs), end(costs));
-  // int best_idx = distance(begin(costs), best_cost);
-  //
-  // return final_trajectories[best_idx];
+  // TODO: identify traj with lower cost
+  // for now keep KL
+
+  std::cout << "assigning traj & vel" << std::endl;
+
+  for (int i = 0; i < 50; i++){
+    next_vals_x.push_back(KLTrajX[i]);
+    next_vals_y.push_back(KLTrajY[i]);
+    //std::cout<< "Traj x,y = "<< next_vals_x [i] << " , "<<next_vals_y [i]<<std::endl;
+
+  }
+
+  r_vel = current_KL_vel;
+  std::cout << "assigned" << std::endl;
+  //std::cout<< "rvel = " << r_vel << std::endl;
 }
 
 
@@ -288,9 +319,10 @@ vector<string> Vehicle::successorStates() {
     }
   }
 
-
   return states;
 }
+
+
 //
 // vector<Vehicle> Vehicle::generate_trajectory(string state,
 //                                              map<int, vector<Vehicle>> &predictions) {
