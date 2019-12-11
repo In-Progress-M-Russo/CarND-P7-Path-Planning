@@ -169,8 +169,6 @@ int main() {
 
             // 1. Create maps for vehicles and trajectories
 
-            // Vehicle counter
-            int vehicles_added = 0;
 
             for (int l = 0; l < sensor_fusion.size(); ++l) {
 
@@ -210,20 +208,23 @@ int main() {
               vehicle.lanes_available = 3;
 
               // Insert vehicles in the map
-              vehicles_added += 1;
-              vehicles.insert(std::pair<int,Vehicle>(vehicles_added,vehicle));
+
+              vehicles.insert(std::pair<int,Vehicle>(l,vehicle));
 
               // Create predicted trajectory
               // NOTE: default horizon = 2 s
               int pred_path_length = 30;
               vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
                 pred_path_length);
-              predictions[vehicles_added] = preds;
+              //predictions[vehicles_added-1] = preds;
+
+              predictions.insert(std::pair<int,vector<Vehicle>>(l, preds));
+
             }
 
             // 2. Change Ego state based on predictions
 
-            ego_vehicle.implementNextTrajectory(vehicles, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+            ego_vehicle.implementNextTrajectory(vehicles, predictions, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
                                                   map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane,
                                                   init_acc_over);
             // ego_vehicle.realize_next_state(trajectory);

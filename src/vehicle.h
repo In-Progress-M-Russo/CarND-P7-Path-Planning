@@ -21,7 +21,7 @@ class Vehicle {
   virtual ~Vehicle();
 
   // Vehicle functions
-  void implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double> &next_vals_x, vector<double> &next_vals_y,
+  void implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions, vector<double> &next_vals_x, vector<double> &next_vals_y,
                                vector<double> &previous_x_path,
                                vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
                                const vector<double> &map_x_waypoints,

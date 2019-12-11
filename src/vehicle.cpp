@@ -189,31 +189,14 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
 
 // //
-void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double> &next_vals_x,
+void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions, vector<double> &next_vals_x,
                                       vector<double> &next_vals_y, vector<double> &previous_x_path,
                                       vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
                                       const vector<double> &map_x_waypoints,
                                       const vector<double> &map_y_waypoints, double &r_vel, int current_lane,
                                       bool &init_acc_over) {
   /**
-   * Here you can implement the transition_function code from the Behavior
-   *   Planning Pseudocode classroom concept.
-   *
-   * @param A predictions map. This is a map of vehicle id keys with predicted
-   *   vehicle trajectories as values. Trajectories are a vector of Vehicle
-   *   objects representing the vehicle at the current timestep and one timestep
-   *   in the future.
-   * @output The best (lowest cost) trajectory corresponding to the next ego
-   *   vehicle state.
-   *
-   * Functions that will be useful:
-   * 1. successor_states - Uses the current state to return a vector of possible
-   *    successor states for the finite state machine.
-   * 2. generate_trajectory - Returns a vector of Vehicle objects representing
-   *    a vehicle trajectory, given a state and predictions. Note that
-   *    trajectory vectors might have size 0 if no possible trajectory exists
-   *    for the state.
-   * 3. calculate_cost - Included from cost.cpp, computes the cost for a trajectory.
+
    */
   vector<string> states = successorStates();
 
@@ -225,12 +208,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double
     std::cout << "Possible successor state = " << states[l] << std::endl;
   }
 
-  vector<double> KLTrajX;
-  vector<double> KLTrajY;
-  vector<double> LCLTrajX;
-  vector<double> LCLTrajY;
-  vector<double> LCRTrajX;
-  vector<double> LCRTrajY;
+  vector<double> genericTrajX;
+  vector<double> genericTrajY;
 
   double current_KL_vel = r_vel;
 
@@ -239,37 +218,59 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double
     if (it->compare("KL") == 0)
     {
       std::cout<< "KL Traj"<< std::endl;
+
+      genericTrajX.clear();
+      genericTrajY.clear();
+
       regulateVelocity(vehicles, current_KL_vel, previous_x_path, init_acc_over);
       //
-      generateXYTrajectory(KLTrajX, KLTrajY, previous_x_path, previous_y_path,
+      generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                            map_s_waypoints, map_x_waypoints, map_y_waypoints, current_KL_vel, current_lane);
 
-      genericTrajsX[0] = KLTrajX;
-      genericTrajsY[0] = KLTrajY;
+      genericTrajsX[0] = genericTrajX;
+      genericTrajsY[0] = genericTrajY;
+
+      for (int i = 0; i < genericTrajX.size(); i++){
+        for (int j = 0; j < predictions.size(); j++){
+          for (int k = 0; k < predictions[j].size(); k++){
+            //std::cout<<"dist = "<<distance(genericTrajX[i],genericTrajY[i],predictions[j].at(k).x,predictions[j].at(k).y)<<std::endl;
+            // TODO implement distance (collision) check
+          }
+        }
+      }
+
     }
     else if (it->compare("LCL") ==0)
     {
       std::cout<< "LCL Traj"<< std::endl;
+
+      genericTrajX.clear();
+      genericTrajY.clear();
+
       if (current_lane>0) {
         int target_lane = current_lane - 1;
-        generateXYTrajectory(LCLTrajX, LCLTrajY, previous_x_path, previous_y_path,
+        generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
 
-      genericTrajsX[1] = LCLTrajX;
-      genericTrajsY[1] = LCLTrajY;
+      genericTrajsX[1] = genericTrajX;
+      genericTrajsY[1] = genericTrajY;
     }
     else if (it->compare("LCR") == 0)
     {
       std::cout<< "LCR Traj"<< std::endl;
+
+      genericTrajX.clear();
+      genericTrajY.clear();
+
       if (current_lane<2){
         int target_lane = current_lane + 1;
-        generateXYTrajectory(LCRTrajX, LCRTrajY, previous_x_path, previous_y_path,
+        generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
 
-      genericTrajsX[2] = LCRTrajX;
-      genericTrajsY[2] = LCRTrajY;
+      genericTrajsX[2] = genericTrajX;
+      genericTrajsY[2] = genericTrajY;
     }
 
     // TODO: Calculate a cost
@@ -281,12 +282,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, vector<double
 
   std::cout << "assigning traj & vel" << std::endl;
 
-  for (int i = 0; i < 50; i++){
-    next_vals_x.push_back(KLTrajX[i]);
-    next_vals_y.push_back(KLTrajY[i]);
-    //std::cout<< "Traj x,y = "<< next_vals_x [i] << " , "<<next_vals_y [i]<<std::endl;
+  std::cout<< "TEST :"<< genericTrajsX[0].size()<<std::endl;
 
-  }
+  next_vals_x = genericTrajsX[0];
+  next_vals_y = genericTrajsY[0];
 
   r_vel = current_KL_vel;
   std::cout << "assigned" << std::endl;
@@ -322,28 +321,6 @@ vector<string> Vehicle::successorStates() {
   return states;
 }
 
-
-//
-// vector<Vehicle> Vehicle::generate_trajectory(string state,
-//                                              map<int, vector<Vehicle>> &predictions) {
-//   // Given a possible next state, generate the appropriate trajectory to realize
-//   //   the next state.
-//   vector<Vehicle> trajectory;
-//   if (state.compare("CS") == 0) {
-//     trajectory = constant_speed_trajectory();
-//   } else if (state.compare("KL") == 0) {
-//     //std::cout<<"Generate KL Traj"<< std::endl;
-//     trajectory = keep_v_lane_trajectory(predictions);
-//   } else if (state.compare("LCL") == 0 || state.compare("LCR") == 0) {
-//     trajectory = v_lane_change_trajectory(state, predictions);
-//   } else if (state.compare("PLCL") == 0 || state.compare("PLCR") == 0) {
-//     //std::cout<<"Generate PLC Traj"<< std::endl;
-//     trajectory = prep_v_lane_change_trajectory(state, predictions);
-//   }
-//
-//   return trajectory;
-// }
-//
 
 
 vector<Vehicle> Vehicle::generatePredictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
