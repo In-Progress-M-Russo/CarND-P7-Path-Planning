@@ -198,26 +198,22 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   /**
 
    */
-  vector<string> states = successorStates();
 
   map<int ,vector<double> > genericTrajsX;
   map<int ,vector<double> > genericTrajsY;
-
-
-  for(int l = 0; l< states.size(); l++){
-    std::cout << "Possible successor state = " << states[l] << std::endl;
-  }
 
   vector<double> genericTrajX;
   vector<double> genericTrajY;
 
   double current_KL_vel = r_vel;
+  bool coll_event = false;
 
+  vector<string> states = successorStates();
   //
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
-      std::cout<< "KL Traj"<< std::endl;
+      //std::cout<< "KL Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
@@ -230,47 +226,117 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
       genericTrajsX[0] = genericTrajX;
       genericTrajsY[0] = genericTrajY;
 
-      for (int i = 0; i < genericTrajX.size(); i++){
-        for (int j = 0; j < predictions.size(); j++){
-          for (int k = 0; k < predictions[j].size(); k++){
-            //std::cout<<"dist = "<<distance(genericTrajX[i],genericTrajY[i],predictions[j].at(k).x,predictions[j].at(k).y)<<std::endl;
-            // TODO implement distance (collision) check
-          }
-        }
-      }
 
     }
     else if (it->compare("LCL") ==0)
     {
-      std::cout<< "LCL Traj"<< std::endl;
+      //std::cout<< "LCL Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
 
+      int target_lane =0;
       if (current_lane>0) {
-        int target_lane = current_lane - 1;
+        target_lane = current_lane - 1;
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
 
       genericTrajsX[1] = genericTrajX;
       genericTrajsY[1] = genericTrajY;
+
+      float min_dist = 999999.9;
+      float dist = 0.0;
+
+      // loop over predictions to check collision
+      int j = 0;
+      coll_event = false;
+
+      while ((coll_event == false) && (j < predictions.size())){
+
+        // check if the vehicle considered is in the actual or target lane
+        if ((predictions[j].at(0).lane == current_lane) || (predictions[j].at(0).lane == target_lane)){
+
+          int i = 0;
+          // loop over predicted and generated trajectories until a collision is found
+          while ((coll_event == false) && (i < genericTrajX.size())){
+
+            int k = 0;
+
+            while ((coll_event == false) && (k < predictions[j].size())) {
+
+              dist = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
+              coll_event = (dist < 10.0);
+              if (dist < min_dist) {
+                min_dist = dist;
+              }
+              k += 1;
+            }
+            i += 1;
+          }
+        }
+        j += 1;
+      }
+      //std::cout << "Min. Distance LCR = "<< min_dist<<std::endl;
+      if (coll_event){
+        std::cout << "COLLISION DETECTED FOR LCL"<< std::endl;
+      }
+
     }
     else if (it->compare("LCR") == 0)
     {
-      std::cout<< "LCR Traj"<< std::endl;
+      //std::cout<< "LCR Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
 
+      int target_lane =0;
       if (current_lane<2){
-        int target_lane = current_lane + 1;
+        target_lane = current_lane + 1;
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
 
       genericTrajsX[2] = genericTrajX;
       genericTrajsY[2] = genericTrajY;
+
+      float min_dist = 999999.9;
+      float dist = 0.0;
+
+      // loop over predictions to check collision
+      int j = 0;
+      coll_event = false;
+
+      while ((coll_event == false) && (j < predictions.size())){
+
+        // check if the vehicle considered is in the actual or target lane
+        if ((predictions[j].at(0).lane == current_lane) || (predictions[j].at(0).lane == target_lane)){
+
+          int i = 0;
+          // loop over predicted and generated trajectories until a collision is found
+          while ((coll_event == false) && (i < genericTrajX.size())){
+
+            int k = 0;
+
+            while ((coll_event == false) && (k < predictions[j].size())) {
+
+              dist = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
+              coll_event = (dist < 10.0);
+              if (dist < min_dist) {
+                min_dist = dist;
+              }
+              k += 1;
+            }
+            i += 1;
+          }
+        }
+        j += 1;
+      }
+      //std::cout << "Min. Distance LCL = "<< min_dist<<std::endl;
+      if (coll_event){
+        std::cout << "COLLISION DETECTED FOR LCL"<< std::endl;
+      }
+
     }
 
     // TODO: Calculate a cost
@@ -280,15 +346,13 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   // TODO: identify traj with lower cost
   // for now keep KL
 
-  std::cout << "assigning traj & vel" << std::endl;
-
-  std::cout<< "TEST :"<< genericTrajsX[0].size()<<std::endl;
+  //std::cout << "assigning traj & vel" << std::endl;
 
   next_vals_x = genericTrajsX[0];
   next_vals_y = genericTrajsY[0];
 
   r_vel = current_KL_vel;
-  std::cout << "assigned" << std::endl;
+  //std::cout << "assigned" << std::endl;
   //std::cout<< "rvel = " << r_vel << std::endl;
 }
 
@@ -308,12 +372,12 @@ vector<string> Vehicle::successorStates() {
     states.push_back("LCR");
   }
   else if (state.compare("LCL") == 0) {
-    if (lane != lanes_available - 1) {
+    if (lane != 0) {
       states.push_back("LCL");
     }
   }
   else if (state.compare("LCR") == 0) {
-    if (lane != 0) {
+    if (lane != lanes_available - 1) {
       states.push_back("LCR");
     }
   }
