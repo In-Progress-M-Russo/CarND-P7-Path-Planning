@@ -206,19 +206,23 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   vector<double> genericTrajX;
   vector<double> genericTrajY;
   vector<double> costs;
+  vector<int> target_lanes;
 
   int num_traj = 0;
+  int target_lane = current_lane;
 
   double current_KL_vel = r_vel;
   bool coll_event_LCL = false;
   bool coll_event_LCR = false;
 
   vector<string> states = successorStates();
+
+  std::cout<< "Starting state: "<< this->state << std::endl;
   //
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
-      //std::cout<< "KL Traj"<< std::endl;
+      std::cout<< "KL Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
@@ -242,16 +246,16 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         costs.push_back(0.0);
       }
 
-
+      std::cout << "Inserting KL target lane = "<< current_lane <<std::endl;
+      target_lanes.push_back(current_lane);
     }
     else if (it->compare("LCL") ==0)
     {
-      //std::cout<< "LCL Traj"<< std::endl;
+      std::cout<< "LCL Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
 
-      int target_lane =0;
       if (current_lane>0) {
         target_lane = current_lane - 1;
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
@@ -284,7 +288,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
             while ((coll_event_LCL == false) && (k < predictions[j].size())) {
 
               dist = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
-              coll_event_LCL = (dist < 5.0);
+              coll_event_LCL = (dist < 10.0);
               if (dist < min_dist) {
                 min_dist = dist;
               }
@@ -303,15 +307,16 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         costs.push_back(0.1);
       }
 
+      std::cout << "Inserting LCL target lane = "<< target_lane <<std::endl;
+      target_lanes.push_back(target_lane);
     }
     else if (it->compare("LCR") == 0)
     {
-      //std::cout<< "LCR Traj"<< std::endl;
+      std::cout<< "LCR Traj"<< std::endl;
 
       genericTrajX.clear();
       genericTrajY.clear();
-
-      int target_lane =0;
+      
       if (current_lane<2){
         target_lane = current_lane + 1;
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
@@ -362,6 +367,9 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
       } else{
         costs.push_back(0.2);
       }
+
+      std::cout << "Inserting LCR target lane = "<< target_lane <<std::endl;
+      target_lanes.push_back(target_lane);
     }
   }
 
@@ -370,40 +378,58 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
   int min_cost_index = min_element(costs.begin(), costs.end()) - costs.begin();
   std::cout << "Min Cost Index = " << min_cost_index << std::endl;
+  std::cout << "Target lane @ Min Cost Index = " << target_lanes.at(min_cost_index) << std::endl;
 
 
   //std::cout << "assigning traj & vel" << std::endl;
 
-  next_vals_x = genericTrajsX.at(0);
-  next_vals_y = genericTrajsY.at(0);
+  next_vals_x = genericTrajsX.at(min_cost_index);
+  next_vals_y = genericTrajsY.at(min_cost_index);
 
-  r_vel = current_KL_vel;
-  //std::cout << "assigned" << std::endl;
-  //std::cout<< "rvel = " << r_vel << std::endl;
+  this->state = states.at(min_cost_index);
+  this->goal_lane = target_lanes.at(min_cost_index);
+
+  std::cout<< "Modified state: "<< this->state << std::endl;
+  std:cout<< "Current Lane: "<<this->lane<<", Goal Lane: "<<this->goal_lane<<std::endl;
+
+  if (this->state == "KL"){
+    r_vel = current_KL_vel;
+  }
 }
 
 
 //
 vector<string> Vehicle::successorStates() {
   // Provides the possible next states given the current state for the FSM
-  //   discussed in the course,
   vector<string> states;
 
-  states.push_back("KL");
+  std:cout<< "States gen: Current Lane: "<<this->lane<<", Goal Lane: "<<this->goal_lane<<std::endl;
+
 
   string state = this->state;
 
   if(state.compare("KL") == 0) {
-    states.push_back("LCL");
-    states.push_back("LCR");
+    states.push_back("KL");
+    if (this->lane != 0) {
+      states.push_back("LCL");
+    }
+    if (this->lane != this->lanes_available - 1) {
+      states.push_back("LCR");
+    }
   }
   else if (state.compare("LCL") == 0) {
-    if (lane != 0) {
+    if (this->lane == this->goal_lane){
+      states.push_back("KL");
+    }
+    if (this->lane != 0) {
       states.push_back("LCL");
     }
   }
   else if (state.compare("LCR") == 0) {
-    if (lane != lanes_available - 1) {
+    if (this->lane == this->goal_lane){
+      states.push_back("KL");
+    }
+    if (this->lane != this->lanes_available - 1) {
       states.push_back("LCR");
     }
   }

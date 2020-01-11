@@ -64,8 +64,9 @@ int main() {
   double ref_vel = 0;
 
   // EGO STATE
-  // Initialized at KL
+  // Initialized at Keep Lane
   string ego_state = "KL";
+  int ego_goal_lane = 1;
 
   // Initial acceleration phase
   // while the vehicle is accelerating for the first time (up to 50 mph) we
@@ -73,7 +74,7 @@ int main() {
   bool init_acc_over = false;
 
   // lambda function called on message from sim
-  h.onMessage([&ref_vel, &max_s, &lane, &ego_state, &init_acc_over,
+  h.onMessage([&ref_vel, &max_s, &lane, &ego_state, &ego_goal_lane, &init_acc_over,
                &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -155,12 +156,16 @@ int main() {
           // Setting of the current state
           ego_vehicle.state = ego_state;
 
+          // set of the current goal lane
+          ego_vehicle.goal_lane = ego_goal_lane;
+
           // Setting of the goals in terms of distance to reach and speed to maintain
           ego_vehicle.goal_s = max_s;
           ego_vehicle.target_speed = ref_vel*MPH2MS;
 
           // Setting the number of lanes
           ego_vehicle.lanes_available = 3;
+
 
           // ===================================================================
           // FINITE STATE MACHINE
@@ -170,93 +175,65 @@ int main() {
             // 1. Create maps for vehicles and trajectories
 
 
-            for (int l = 0; l < sensor_fusion.size(); ++l) {
+          for (int l = 0; l < sensor_fusion.size(); ++l) {
 
-              // Create a vehicle object for every vehicle in sensor fusion
-              // Read sensed coordinates/velocity
-              float sensed_x  = sensor_fusion[l][1];
-              float sensed_y  = sensor_fusion[l][2];
-              float sensed_vx  = sensor_fusion[l][3];
-              float sensed_vy  = sensor_fusion[l][4];
-              float sensed_s  = sensor_fusion[l][5];
-              float sensed_d  = sensor_fusion[l][6];
+            // Create a vehicle object for every vehicle in sensor fusion
+            // Read sensed coordinates/velocity
+            float sensed_x  = sensor_fusion[l][1];
+            float sensed_y  = sensor_fusion[l][2];
+            float sensed_vx  = sensor_fusion[l][3];
+            float sensed_vy  = sensor_fusion[l][4];
+            float sensed_s  = sensor_fusion[l][5];
+            float sensed_d  = sensor_fusion[l][6];
 
-              // Define a lane for the vehicle
-              int sensed_lane;
+            // Define a lane for the vehicle
+            int sensed_lane;
 
-              if ((sensed_d >= 0.0) && (sensed_d < LANE_WIDTH)){
-                sensed_lane = 0;
-              } else if ((sensed_d >= LANE_WIDTH) && (sensed_d < 2*LANE_WIDTH)){
-                sensed_lane = 1;
-              } else {
-                sensed_lane = 2;
-              }
-
-              // Calculate the magnitude of the speed
-              float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
-
-              // calculate yaw
-              float sensed_yaw = atan2(sensed_vy,sensed_vx);
-
-              // Create vehicle object from current data
-              Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_d,sensed_speed,0,sensed_x,sensed_y,sensed_yaw);
-
-              // Set a state, assuming constant speed
-              vehicle.state = "CS";
-
-              // Setting the number of lanes
-              vehicle.lanes_available = 3;
-
-              // Insert vehicles in the map
-
-              vehicles.insert(std::pair<int,Vehicle>(l,vehicle));
-
-              // Create predicted trajectory
-              // NOTE: default horizon = 2 s
-              int pred_path_length = 30;
-              vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
-                pred_path_length);
-              //predictions[vehicles_added-1] = preds;
-
-              predictions.insert(std::pair<int,vector<Vehicle>>(l, preds));
-
+            if ((sensed_d >= 0.0) && (sensed_d < LANE_WIDTH)){
+              sensed_lane = 0;
+            } else if ((sensed_d >= LANE_WIDTH) && (sensed_d < 2*LANE_WIDTH)){
+              sensed_lane = 1;
+            } else {
+              sensed_lane = 2;
             }
 
-            // 2. Change Ego state based on predictions
+            // Calculate the magnitude of the speed
+            float sensed_speed = sqrt(sensed_vx*sensed_vx + sensed_vy*sensed_vy);
 
-            ego_vehicle.implementNextTrajectory(vehicles, predictions, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
-                                                  map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane,
-                                                  init_acc_over);
-            // ego_vehicle.realize_next_state(trajectory);
-            //
-            // ego_state = ego_vehicle.state;
-            // lane = ego_vehicle.lane;
-            // std::cout << "Ego Vehicle state after predictions: "<< ego_state << std::endl;
-            // std::cout << "Lane Vehicle after predictions: "<< lane << std::endl;
+            // calculate yaw
+            float sensed_yaw = atan2(sensed_vy,sensed_vx);
 
+            // Create vehicle object from current data
+            Vehicle vehicle = Vehicle(sensed_lane,sensed_s,sensed_d,sensed_speed,0,sensed_x,sensed_y,sensed_yaw);
 
-          // ===================================================================
-          // UPDATE REF VELOCITY in case of KL state
-          // In case we can stay in this lane let's check if we can accelerate
-          // or we'd better slow down
+            // Set a state, assuming constant speed
+            vehicle.state = "CS";
 
-          // *************************************
-          // DUMMY
-          // ego_state = "KL";
-          // // *************************************
-          //
-          // if (ego_state == "KL"){
-          //   ego_vehicle.regulateVelocity(vehicles, ref_vel, previous_path_x, init_acc_over);
-          // }
-          //
-          // //====================================================================
-          // // TRAJ GENERATION
-          // //====================================================================
-          //
-          // //====================================================================
-          //
-          // ego_vehicle.generateXYTrajectory(next_x_vals, next_y_vals, previous_path_x, previous_path_y,
-          //   map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, lane);
+            // Setting the number of lanes
+            vehicle.lanes_available = 3;
+
+            // Insert vehicles in the map
+
+            vehicles.insert(std::pair<int,Vehicle>(l,vehicle));
+
+            // Create predicted trajectory
+            // NOTE: default horizon = 2 s
+            int pred_path_length = 30;
+            vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
+              pred_path_length);
+
+            predictions.insert(std::pair<int,vector<Vehicle>>(l, preds));
+          }
+
+          // 2. Change Ego state based on predictions
+
+          ego_vehicle.implementNextTrajectory(vehicles, predictions, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
+                                                map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, sensed_ego_lane,
+                                                init_acc_over);
+
+          ego_state = ego_vehicle.state;
+          ego_goal_lane = ego_vehicle.goal_lane;
+
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
