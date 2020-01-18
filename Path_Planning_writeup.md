@@ -1,4 +1,11 @@
 ## Path Planning Project
+The goal of this project is the implementation, in C++, of a path planning algorythm able to navigate a vehicle around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. The car stays as close as possible to the 50 MPH speed limit, passing slower traffic when possible. The path planner will avoid colliding with other cars and will keep the Ego vehicle inside of the marked road lanes at all times, unless going from one lane to another. 
+
+The source code is contained in the [src](./src) folder in this git repo. It is the evolution of a starter project provided directly by Udacity, where the [main.cpp](./src/main.cpp) file was modified and the [vehicle.cpp](./src/vehicle.cpp) and [vehicle.h](./src/vehicle.h) files were added.
+
+The following sections of this writeup will provide details on the filter operations and the data flow, and in doing so the fundamental pieces of the code will be explained. A final Results section will show the outcomes of the filter running against the reference data set. 
+
+---
 
 ### Goals
 In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 10 m/s^3.
