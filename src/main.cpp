@@ -54,17 +54,12 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
 
-  // Starting lane identifier
-  // Lane can be {0,1,2}, left to right
-  // By default the vehicle starts in the middle lane
-  int lane = 1;
-
   // Reference velocity
   // Starting from 0 the vehicle will accelerate/decelerate
   double ref_vel = 0;
 
   // EGO STATE
-  // Initialized at Keep Lane
+  // Initialized at Keep Lane/middle lane
   string ego_state = "KL";
   int ego_goal_lane = 1;
 
@@ -74,7 +69,7 @@ int main() {
   bool init_acc_over = false;
 
   // lambda function called on message from sim
-  h.onMessage([&ref_vel, &max_s, &lane, &ego_state, &ego_goal_lane, &init_acc_over,
+  h.onMessage([&ref_vel, &max_s, &ego_state, &ego_goal_lane, &init_acc_over,
                &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -104,7 +99,6 @@ int main() {
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
 
-          std::cout << "****************************************** "<< std::endl;
           // Previous path data given to the Planner and NOT yet executed by
           // the car
           vector<double> previous_path_x = j[1]["previous_path_x"];
@@ -138,6 +132,7 @@ int main() {
           // ===================================================================
           // CREATION OF AN EGO VEHICLE OBJECT
           // Definition of the ego lane
+          // Lane can be {0,1,2}, left to right
           int sensed_ego_lane;
 
           if ((car_d >= 0.0) && (car_d < LANE_WIDTH)){
@@ -158,10 +153,6 @@ int main() {
 
           // set of the current goal lane
           ego_vehicle.goal_lane = ego_goal_lane;
-
-          // Setting of the goals in terms of distance to reach and speed to maintain
-          ego_vehicle.goal_s = max_s;
-          ego_vehicle.target_speed = ref_vel*MPH2MS;
 
           // Setting the number of lanes
           ego_vehicle.lanes_available = 3;

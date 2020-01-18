@@ -24,7 +24,6 @@ Vehicle::Vehicle(int v_lane, float s, float d, float v, float a, float x, float 
   this->y = y;
   this->yaw = yaw;
   this->state = state;
-  max_acceleration = -1;
 }
 
 Vehicle::~Vehicle() {}
@@ -32,7 +31,6 @@ Vehicle::~Vehicle() {}
 void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
                         const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
                         double r_vel, int target_lane) {
-
 
   double car_x = this->x;
   double car_y = this->y;
@@ -129,7 +127,6 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
 
     next_vals_x.push_back(x_point);
     next_vals_y.push_back(y_point);
-    //std::cout<< "Traj x,y = "<< x_point << " , "<<y_point<<std::endl;
   }
 }
 
@@ -172,19 +169,15 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
   // if we're too close slow down
   if (too_close == true){
-    std::cout << "SLOWING DOWN TO AVOID COLLISION" << '\n';
     ref_vel -= 0.224;
   }
   else if (ref_vel < 49.5){
-    std::cout << "ACCELERATING" << '\n';
     ref_vel+= 0.224;
   }
   else{
     if (init_acc_over == false){
-      std::cout << "OVER INIT ACC" << '\n';
       init_acc_over = true;
     }
-    std::cout << "MAINTANING SPEED" << '\n';
   }
 }
 
@@ -217,13 +210,9 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
   vector<string> states = successorStates();
 
-  std::cout<< "Starting state: "<< this->state << std::endl;
-  //
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
-      std::cout<< "KL Traj"<< std::endl;
-
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -246,13 +235,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         costs.push_back(0.0);
       }
 
-      std::cout << "Inserting KL target lane = "<< current_lane <<std::endl;
       target_lanes.push_back(current_lane);
     }
     else if (it->compare("LCL") ==0)
     {
-      std::cout<< "LCL Traj"<< std::endl;
-
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -299,21 +285,17 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         }
         j += 1;
       }
-      //std::cout << "Min. Distance LCR = "<< min_dist<<std::endl;
+
       if (coll_event_LCL){
-        std::cout << "COLLISION DETECTED FOR LCL"<< std::endl;
         costs.push_back(1.1);
       } else {
         costs.push_back(0.1);
       }
 
-      std::cout << "Inserting LCL target lane = "<< target_lane <<std::endl;
       target_lanes.push_back(target_lane);
     }
     else if (it->compare("LCR") == 0)
     {
-      std::cout<< "LCR Traj"<< std::endl;
-
       genericTrajX.clear();
       genericTrajY.clear();
       
@@ -360,37 +342,25 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         }
         j += 1;
       }
-      //std::cout << "Min. Distance LCL = "<< min_dist<<std::endl;
+
       if (coll_event_LCR){
-        std::cout << "COLLISION DETECTED FOR LCR"<< std::endl;
         costs.push_back(1.2);
       } else{
         costs.push_back(0.2);
       }
 
-      std::cout << "Inserting LCR target lane = "<< target_lane <<std::endl;
       target_lanes.push_back(target_lane);
     }
   }
 
   // find lower cost
-  std::cout << "Min Cost = " << *min_element(costs.begin(), costs.end()) << std::endl;
-
   int min_cost_index = min_element(costs.begin(), costs.end()) - costs.begin();
-  std::cout << "Min Cost Index = " << min_cost_index << std::endl;
-  std::cout << "Target lane @ Min Cost Index = " << target_lanes.at(min_cost_index) << std::endl;
-
-
-  //std::cout << "assigning traj & vel" << std::endl;
 
   next_vals_x = genericTrajsX.at(min_cost_index);
   next_vals_y = genericTrajsY.at(min_cost_index);
 
   this->state = states.at(min_cost_index);
   this->goal_lane = target_lanes.at(min_cost_index);
-
-  std::cout<< "Modified state: "<< this->state << std::endl;
-  std:cout<< "Current Lane: "<<this->lane<<", Goal Lane: "<<this->goal_lane<<std::endl;
 
   if (this->state == "KL"){
     r_vel = current_KL_vel;
@@ -402,9 +372,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 vector<string> Vehicle::successorStates() {
   // Provides the possible next states given the current state for the FSM
   vector<string> states;
-
-  std:cout<< "States gen: Current Lane: "<<this->lane<<", Goal Lane: "<<this->goal_lane<<std::endl;
-
 
   string state = this->state;
 
@@ -449,13 +416,14 @@ vector<Vehicle> Vehicle::generatePredictions(const vector<double> &map_s_waypoin
   float curr_s = this->s;
   for(int i = 0; i < pred_size; ++i) {
     float next_s = curr_s + this->v * DELTA_T;
-    vector<double> next_xy = getXY(next_s,this->d,map_s_waypoints,map_x_waypoints,map_y_waypoints);
-    // std::cout << "Trajectory - s: " << next_s << ", v: "<< this->v << ", x: "<< next_xy[0] << ", y: " << next_xy[1]<<std::endl;
+
     // NOTE: Yaw is not considered for these trajectories
+    vector<double> next_xy = getXY(next_s,this->d,map_s_waypoints,map_x_waypoints,map_y_waypoints);
+
     predictions.push_back(Vehicle(this->lane, next_s, this->d, this->v, 0, next_xy[0], next_xy[1],-1,"CS"));
+
     curr_s = next_s;
   }
-
 
   return predictions;
 }

@@ -21,70 +21,35 @@ class Vehicle {
   virtual ~Vehicle();
 
   // Vehicle functions
+  // -----------------
+  // Generate a trajectory
+  void generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
+                              const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
+                              double r_vel, int target_lane);
+
+  // Implement a trajectory
   void implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions, vector<double> &next_vals_x, vector<double> &next_vals_y,
                                vector<double> &previous_x_path,
                                vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
                                const vector<double> &map_x_waypoints,
                                const vector<double> &map_y_waypoints, double &r_vel, int current_lane,
                                bool &init_acc_over);
-  //
+
+  // Regulate velocity
+  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
+
+  // Define successor states according to FSM
   vector<string> successorStates();
-  //
-  //vector<Vehicle> generateTrajectory(string state,
-  //                                     map<int, vector<Vehicle>> &predictions);
-  //
-  // vector<float> get_kinematics(map<int, vector<Vehicle>> &predictions, int lane);
-  //
-  // vector<Vehicle> constant_speed_trajectory();
-  //
-  // vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> &predictions);
-  //
-  // vector<Vehicle> lane_change_trajectory(string state,
-  //                                        map<int, vector<Vehicle>> &predictions);
-  //
-  // vector<Vehicle> prep_lane_change_trajectory(string state,
-  //                                             map<int, vector<Vehicle>> &predictions);
-  //
-  // void increment(int dt);
-  //
-  // float position_at(int t);
-  //
-  // bool get_vehicle_behind(map<int, vector<Vehicle>> &predictions, int lane,
-  //                         Vehicle &rVehicle);
-  //
-  // bool get_vehicle_ahead(map<int, vector<Vehicle>> &predictions, int lane,
-  //                        Vehicle &rVehicle);
-  //
 
-
+  // Generate trajectory predictions for non-Ego
   vector<Vehicle> generatePredictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
                           const vector<double> &map_y_waypoints,int length);
 
-  // void realize_next_state(vector<Vehicle> &trajectory);
+  // Vehicle attributes
+  // ------------------
+  int lane, goal_lane, lanes_available;
 
-  //
-  void generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
-                          const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
-                          double r_vel, int target_lane);
-
-  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
-
-  // public Vehicle variables
-  struct collider{
-    bool collision; // is there a collision?
-    int  time; // time collision happens
-  };
-
-  map<string, int> lane_direction = {{"PLCL", 1}, {"LCL", 1},
-                                     {"LCR", -1}, {"PLCR", -1}};
-
-  int L = 1;
-
-  int preferred_buffer = 6; // impacts "keep lane" behavior.
-
-  int lane, goal_lane, goal_s, lanes_available;
-
-  float v, target_speed, a, max_acceleration;
+  float v, a;
 
   float s, d, x, y, yaw;
 
