@@ -8,7 +8,7 @@ The following sections of this writeup will provide details on the filter operat
 ---
 ## Data Input
 
-The data source for this Filter will be the Udacity [simulator](https://github.com/udacity/self-driving-car-sim/releases). The compiled code will open a websocke session to the sim to read localization information for the vehicles and provide back a trajectory to follow.
+The data source for this Filter will be the Udacity [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2). The compiled code will open a websocket session to the sim to read localization information for the vehicles and provide back a trajectory to follow.
 
 ### _The Map_
 A map of the highway is also provided in the [`highway_map.txt`](./data/highway_map.txt) file that can be found in the [data](./data) directory. 
