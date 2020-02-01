@@ -67,7 +67,7 @@ This is just the parsing of the various items in the message coming from the sim
 ## Path Planning
 The actual Path Planning phase starts on line 117. 
 
-Both the Ego vehicle and the others on the road will be represented through the `Vehicle` object defined in [`Vehicle.h`]./src/vehicle.h) and [`Vehicle.cpp`](./src/vehicle.cpp). The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines (128-130):
+Both the Ego vehicle and the others on the road will be represented through the `Vehicle` object defined in [`Vehicle.h`](./src/vehicle.h) and [`Vehicle.cpp`](./src/vehicle.cpp). The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines (128-130):
 
 ```sh
    // Maps to be filled with the vehicles in the scene and their possible trajectories
