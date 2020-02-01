@@ -169,12 +169,15 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
   // if we're too close slow down
   if (too_close == true){
+    std::cout<< "SLOWING DOWN"<<std::endl;
     ref_vel -= 0.224;
   }
   else if (ref_vel < 49.5){
+    std::cout<< "ACCELERATING"<<std::endl;
     ref_vel+= 0.224;
   }
   else{
+    std::cout<< "MAINTAINING SPEED"<<std::endl;
     if (init_acc_over == false){
       init_acc_over = true;
     }
@@ -205,6 +208,9 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   int target_lane = current_lane;
 
   double current_KL_vel = r_vel;
+  double current_LCL_vel = r_vel;
+  double current_LCR_vel = r_vel;
+
   bool coll_event_LCL = false;
   bool coll_event_LCR = false;
 
@@ -213,6 +219,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
+      std::cout<< "KL Traj"<< std::endl;
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -239,13 +246,18 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
     else if (it->compare("LCL") ==0)
     {
+      std::cout<< "LCL Traj"<< std::endl;
+
       genericTrajX.clear();
       genericTrajY.clear();
 
       if (current_lane>0) {
         target_lane = current_lane - 1;
+
+        regulateVelocity(vehicles, current_LCL_vel, previous_x_path, init_acc_over);
+        //
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
-                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, current_LCL_vel, target_lane);
       }
 
       genericTrajsX.insert(std::pair<int, vector<double>>(num_traj, genericTrajX));
@@ -286,6 +298,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
+      std::cout << "LCL Collision check - min dist = " << min_dist << std::endl;
+
       if (coll_event_LCL){
         costs.push_back(1.1);
       } else {
@@ -296,13 +310,18 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
     else if (it->compare("LCR") == 0)
     {
+      std::cout<< "LCR Traj"<< std::endl;
+
       genericTrajX.clear();
       genericTrajY.clear();
       
       if (current_lane<2){
         target_lane = current_lane + 1;
+
+        regulateVelocity(vehicles, current_LCR_vel, previous_x_path, init_acc_over);
+        //
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
-                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, current_LCR_vel, target_lane);
       }
 
       genericTrajsX.insert(std::pair<int, vector<double>>(num_traj, genericTrajX));
@@ -343,6 +362,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
+      std::cout << "LCR Collision check - min dist = " << min_dist << std::endl;
+
       if (coll_event_LCR){
         costs.push_back(1.2);
       } else{
@@ -364,6 +385,12 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
   if (this->state == "KL"){
     r_vel = current_KL_vel;
+  }
+  else if (this->state == "LCL"){
+    r_vel = current_LCL_vel;
+  }
+  else if (this->state == "LCR"){
+    r_vel = current_LCR_vel;
   }
 }
 

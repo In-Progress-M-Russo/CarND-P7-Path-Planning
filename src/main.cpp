@@ -159,13 +159,9 @@ int main() {
 
 
           // ===================================================================
-          // FINITE STATE MACHINE
+          // TRAJECTORY PREDICTION
 
-          // Get in it only if the initial acceleration phase is over
-
-            // 1. Create maps for vehicles and trajectories
-
-
+          // 1. Create maps for vehicles and trajectories
           for (int l = 0; l < sensor_fusion.size(); ++l) {
 
             // Create a vehicle object for every vehicle in sensor fusion
@@ -218,11 +214,16 @@ int main() {
 
           // 2. Change Ego state based on predictions
 
+          std::cout << "Vehicle state - pre: " << ego_state << std::endl;
+
           ego_vehicle.implementNextTrajectory(vehicles, predictions, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
                                                 map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, sensed_ego_lane,
                                                 init_acc_over);
 
           ego_state = ego_vehicle.state;
+
+          std::cout << "Vehicle state - post: " << ego_state << std::endl;
+
           ego_goal_lane = ego_vehicle.goal_lane;
 
 
