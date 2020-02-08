@@ -137,6 +137,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
   // First of all let's check if there's a chance of getting too close
   // to other cars while keeping this lane, and adapt velocity
   bool too_close = false;
+  bool emergency_brake = false;
 
   for (map<int, Vehicle>::iterator it = vehicles.begin(); it != vehicles.end();
     ++it) {
@@ -164,13 +165,24 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
 
         too_close = true;
       }
+
+      if((check_car_s > this->s) && ((check_car_s - this->s) < 10)){
+
+        emergency_brake = true;
+      }
     }
   }
 
   // if we're too close slow down
   if (too_close == true){
-    std::cout<< "SLOWING DOWN"<<std::endl;
-    ref_vel -= 0.224;
+    if (emergency_brake == true){
+      std::cout<< "EMERGENCY BRAKE"<<std::endl;
+      ref_vel -= 0.4;
+    }
+    else{
+      std::cout<< "SLOWING DOWN"<<std::endl;
+      ref_vel -= 0.224;
+    }
   }
   else if (ref_vel < 49.5){
     std::cout<< "ACCELERATING"<<std::endl;
