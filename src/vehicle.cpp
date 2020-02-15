@@ -220,8 +220,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   int target_lane = current_lane;
 
   double current_KL_vel = r_vel;
-//  double current_LCL_vel = r_vel;
-//  double current_LCR_vel = r_vel;
 
   bool coll_event_LCL = false;
   bool coll_event_LCR = false;
@@ -266,8 +264,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
       if (current_lane>0) {
         target_lane = current_lane - 1;
 
-        // regulateVelocity(vehicles, current_LCL_vel, previous_x_path, init_acc_over);
-        //
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
@@ -277,10 +273,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       num_traj += 1;
 
-      float min_dist = 999999.9;
-      float dist = 0.0;
-      float ref_dist = (49.5/std::max(r_vel,0.1))*10.0;
-      std::cout << "Ref dist = " << ref_dist << std::endl;
+      float min_dist_LCL = 999999.9;
+      float dist_LCL = 0.0;
+      float ref_dist_LCL = (49.5/std::max(r_vel,0.1))*10.0;
+      std::cout << "Ref dist_LCL = " << ref_dist_LCL << std::endl;
 
       // loop over predictions to check collision
       int j = 0;
@@ -299,11 +295,11 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
             while ((coll_event_LCL == false) && (k < predictions[j].size())) {
 
-              dist = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
+              dist_LCL = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
 
-              coll_event_LCL = (dist < ref_dist);
-              if (dist < min_dist) {
-                min_dist = dist;
+              coll_event_LCL = (dist_LCL < ref_dist_LCL);
+              if (dist_LCL < min_dist_LCL) {
+                min_dist_LCL = dist_LCL;
               }
               k += 1;
             }
@@ -313,7 +309,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
-      std::cout << "LCL Collision check - min dist = " << min_dist << std::endl;
+      std::cout << "LCL Collision check - min dist_LCL = " << min_dist_LCL << std::endl;
 
       if (coll_event_LCL){
         costs.push_back(1.1);
@@ -333,8 +329,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
       if (current_lane<2){
         target_lane = current_lane + 1;
 
-        // regulateVelocity(vehicles, current_LCR_vel, previous_x_path, init_acc_over);
-        //
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                              map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
       }
@@ -344,10 +338,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       num_traj += 1;
 
-      float min_dist = 999999.9;
-      float dist = 0.0;
-      float ref_dist = (49.5/std::max(r_vel,0.1))*10.0;
-      std::cout << "Ref dist = " << ref_dist << std::endl;
+      float min_dist_LCR = 999999.9;
+      float dist_LCR= 0.0;
+      float ref_dist_LCR = (49.5/std::max(r_vel,0.1))*10.0;
+      std::cout << "Ref dist_LCR = " << ref_dist_LCR << std::endl;
 
       // loop over predictions to check collision
       int j = 0;
@@ -366,11 +360,11 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
             while ((coll_event_LCR == false) && (k < predictions[j].size())) {
 
-              dist = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
+              dist_LCR = distance(genericTrajX[i], genericTrajY[i], predictions[j].at(k).x, predictions[j].at(k).y);
 
-              coll_event_LCR = (dist < ref_dist);
-              if (dist < min_dist) {
-                min_dist = dist;
+              coll_event_LCR = (dist_LCR < ref_dist_LCR);
+              if (dist_LCR < min_dist_LCR) {
+                min_dist_LCR = dist_LCR;
               }
               k += 1;
             }
@@ -380,7 +374,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
-      std::cout << "LCR Collision check - min dist = " << min_dist << std::endl;
+      std::cout << "LCR Collision check - min dist_LCR = " << min_dist_LCR << std::endl;
 
       if (coll_event_LCR){
         costs.push_back(1.2);
@@ -392,6 +386,11 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
   }
 
+  // disp costs
+
+  for (std::vector<double>::iterator it = costs.begin() ; it != costs.end(); ++it){
+    std::cout<<"Cost vector: "<< *it << std::endl;
+  }
   // find lower cost
   int min_cost_index = min_element(costs.begin(), costs.end()) - costs.begin();
 
@@ -404,12 +403,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   if (this->state == "KL"){
     r_vel = current_KL_vel;
   }
-//  else if (this->state == "LCL"){
-//    r_vel = current_LCL_vel;
-//  }
-//  else if (this->state == "LCR"){
-//    r_vel = current_LCR_vel;
-//  }
 }
 
 
