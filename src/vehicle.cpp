@@ -177,7 +177,7 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
   if (too_close == true){
     if (emergency_brake == true){
       std::cout<< "EMERGENCY BRAKE"<<std::endl;
-      ref_vel -= 0.4;
+      ref_vel -= 1;
     }
     else{
       std::cout<< "SLOWING DOWN"<<std::endl;
@@ -193,6 +193,10 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
     if (init_acc_over == false){
       init_acc_over = true;
     }
+  }
+
+  if (ref_vel <= 0){
+    ref_vel = 0.0;
   }
 }
 
