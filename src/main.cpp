@@ -200,11 +200,9 @@ int main() {
             vehicle.lanes_available = 3;
 
             // Insert vehicles in the map
-
             vehicles.insert(std::pair<int,Vehicle>(l,vehicle));
 
             // Create predicted trajectory
-            // NOTE: default horizon = 2 s
             int pred_path_length = 30;
             vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
               pred_path_length);
