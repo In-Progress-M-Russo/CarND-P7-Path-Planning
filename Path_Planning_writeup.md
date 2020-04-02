@@ -97,10 +97,16 @@ The conditions of the vehicle on the road will be defined through 2 maps defined
    map<int ,vector<Vehicle> > predictions;
 ```
 
-The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories. The trajectory prediction is executed by the `generatePredictions` method in the Vehicle class, that for every vehicle observed, propagate a brief (30 sampling points) trajectory under the assumption of *constant speed*. 
-the trajectories will be evaulated by the FSM and a cost will be associated with them.
+The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories. The trajectory prediction is executed by the `generatePredictions` method in the Vehicle class, that for every vehicle observed, propagate a brief (30 sampling points) trajectory under the assumption of **constant speed**.
 
 ### _The Finite States Machine (FSM)_
+In every moment the trajectory to follow is picked based on a simple FSM that normally considers only 3 states:
+
+`KL` : Keep Lane (regulating speed as needed)
+`LCL` : Lane Change to the Left
+`LCR` : Lane Change to the Right
+
+
 
 ## Trajectory Definition
 The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
