@@ -102,9 +102,11 @@ The first one will be a snapshot of the vehicles as sensed, the second will cont
 ### _The Finite States Machine (FSM)_
 In every moment the trajectory to follow is picked based on a simple FSM that normally considers only 3 states:
 
-`KL` : Keep Lane (regulating speed as needed)
-`LCL` : Lane Change to the Left
-`LCR` : Lane Change to the Right
+State | Definition
+---- | ----
+`KL` | Keep Lane (regulating speed as needed)
+`LCL` | Lane Change to the Left
+`LCR` | Lane Change to the Right
 
 
 
