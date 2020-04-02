@@ -108,7 +108,8 @@ State | Definition
 `LCL` | Lane Change to the Left
 `LCR` | Lane Change to the Right
 
-
+The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
+Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
 
 ## Trajectory Definition
 The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
