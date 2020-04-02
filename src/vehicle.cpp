@@ -11,9 +11,23 @@ using std::string;
 using std::vector;
 using namespace std;
 
-// Initializes Vehicle
+/**
+ * Constructor
+ */
 Vehicle::Vehicle(){}
 
+/**
+ * Constructor with parameters
+ *
+ * @param lane = id for the lane occupied by the vehicle
+ * @param s = longitudinal Frenet coordinates for the vehicle
+ * @param d = transverse Frenet coordinates for the vehicle
+ * @param v = speed of the vehicle (in m/s)
+ * @param a = acceleration of the vehicle
+ * @param x = x-coordinate of the vehicle
+ * @param y = y-coordinate of the vehicle
+ * @param state = state of the vehicle (default = "CS")
+ */
 Vehicle::Vehicle(int v_lane, float s, float d, float v, float a, float x, float y, float yaw, string state) {
   this->lane = v_lane;
   this->s = s;
@@ -26,8 +40,24 @@ Vehicle::Vehicle(int v_lane, float s, float d, float v, float a, float x, float 
   this->state = state;
 }
 
+/**
+ * Destructor
+ */
 Vehicle::~Vehicle() {}
 
+/**
+ * Generate a Trajectory
+ *
+ * @param next_vals_x = vector of x-coordinates for the GENERATED trajectory
+ * @param next_vals_y = vector of y-coordinates for the GENERATED trajectory
+ * @param previous_x_path = vector of x-coordinates for the PREVIOUS trajectory
+ * @param previous_y_path = vector of y-coordinates for the PREVIOUS trajectory
+ * @param map_s_waypoints = vector of reference waypoints in Frenet s coordinates
+ * @param map_x_waypoints = vector of reference waypoints in Cartesian x coordinates
+ * @param map_y_waypoints = vector of reference waypoints in Cartesian y coordinates
+ * @param r_vel = reference speed of the vehicle (in mph)
+ * @param target_lane = id for the target lane
+ */
 void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
                         const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
                         double r_vel, int target_lane) {
@@ -131,86 +161,28 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
 }
 
 
-void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
-  vector<double> &previous_path_x, bool &init_acc_over) {
-
-  // First of all let's check if there's a chance of getting too close
-  // to other cars while keeping this lane, and adapt velocity
-  bool too_close = false;
-  bool emergency_brake = false;
-
-  for (map<int, Vehicle>::iterator it = vehicles.begin(); it != vehicles.end();
-    ++it) {
-    // Loop over vehicles
-    // to find a vehicle which is in the same lane as ego AND too close
-
-    // Get lane for the vehicle
-    int ln = it->second.lane;
-
-    // Check if there's a car in the ego lane
-    if (ln == this->lane){
-      // there is a car in the same lane as ego: calculate its velocity
-      double check_speed = it->second.v;
-
-      // check its position, starting from current s
-      double check_car_s = it->second.s;
-
-      // Where will the car be at the end of the path previously planned
-      // considering constant velocity and sampling interval
-      check_car_s +=((double)previous_path_x.size()*DELTA_T*check_speed);
-
-      // Compare the distance between this predicted position and the
-      // position of the ego. Compare with a given threshold
-      if((check_car_s > this->s) && ((check_car_s - this->s) < 30)){
-
-        too_close = true;
-      }
-
-      if((check_car_s > this->s) && ((check_car_s - this->s) < 10)){
-
-        emergency_brake = true;
-      }
-    }
-  }
-
-  // if we're too close slow down
-  if (too_close == true){
-    if (emergency_brake == true){
-      std::cout<< "EMERGENCY BRAKE"<<std::endl;
-      ref_vel -= 1;
-    }
-    else{
-      std::cout<< "SLOWING DOWN"<<std::endl;
-      ref_vel -= 0.224;
-    }
-  }
-  else if (ref_vel < 49.5){
-    std::cout<< "ACCELERATING"<<std::endl;
-    ref_vel+= 0.224;
-  }
-  else{
-    std::cout<< "MAINTAINING SPEED"<<std::endl;
-    if (init_acc_over == false){
-      init_acc_over = true;
-    }
-  }
-
-  if (ref_vel <= 0){
-    ref_vel = 0.0;
-  }
-}
-
-
-// //
+/**
+ * Implement a Trajectory
+ *
+ * @param vehicles = map of non-ego vehicles
+ * @param predictions = map of predicted trajectories for non-ego vehicles
+ * @param next_vals_x = vector of x-coordinates for the GENERATED trajectory
+ * @param next_vals_y = vector of y-coordinates for the GENERATED trajectory
+ * @param previous_x_path = vector of x-coordinates for the PREVIOUS trajectory
+ * @param previous_y_path = vector of y-coordinates for the PREVIOUS trajectory
+ * @param map_s_waypoints = vector of reference waypoints in Frenet s coordinates
+ * @param map_x_waypoints = vector of reference waypoints in Cartesian x coordinates
+ * @param map_y_waypoints = vector of reference waypoints in Cartesian y coordinates
+ * @param r_vel = reference speed of the vehicle (in mph)
+ * @param current_lane = id for the current lane
+ * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
+ */
 void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions, vector<double> &next_vals_x,
                                       vector<double> &next_vals_y, vector<double> &previous_x_path,
                                       vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
                                       const vector<double> &map_x_waypoints,
                                       const vector<double> &map_y_waypoints, double &r_vel, int current_lane,
                                       bool &init_acc_over) {
-  /**
-
-   */
 
   map<int ,vector<double> > genericTrajsX;
   map<int ,vector<double> > genericTrajsY;
@@ -390,11 +362,11 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
   }
 
-  // disp costs
+  // display costs
 
-  for (std::vector<double>::iterator it = costs.begin() ; it != costs.end(); ++it){
-    std::cout<<"Cost vector: "<< *it << std::endl;
-  }
+//  for (std::vector<double>::iterator it = costs.begin() ; it != costs.end(); ++it){
+//    std::cout<<"Cost vector: "<< *it << std::endl;
+//  }
   // find lower cost
   int min_cost_index = min_element(costs.begin(), costs.end()) - costs.begin();
 
@@ -410,7 +382,92 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 }
 
 
-//
+/**
+ * Regulate Velocity
+ *
+ * @param vehicles = map of non-ego vehicles
+ * @param ref_vel = reference speed of the vehicle (in mph)
+ * @param previous_path_x = vector of x-coordinates for the PREVIOUS trajectory
+ * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
+ */
+void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
+                               vector<double> &previous_path_x, bool &init_acc_over) {
+
+  // First of all let's check if there's a chance of getting too close
+  // to other cars while keeping this lane, and adapt velocity
+  bool too_close = false;
+  bool emergency_brake = false;
+
+  for (map<int, Vehicle>::iterator it = vehicles.begin(); it != vehicles.end();
+       ++it) {
+    // Loop over vehicles
+    // to find a vehicle which is in the same lane as ego AND too close
+
+    // Get lane for the vehicle
+    int ln = it->second.lane;
+
+    // Check if there's a car in the ego lane
+    if (ln == this->lane){
+      // there is a car in the same lane as ego: calculate its velocity
+      double check_speed = it->second.v;
+
+      // check its position, starting from current s
+      double check_car_s = it->second.s;
+
+      // Where will the car be at the end of the path previously planned
+      // considering constant velocity and sampling interval
+      check_car_s +=((double)previous_path_x.size()*DELTA_T*check_speed);
+
+      // Compare the distance between this predicted position and the
+      // position of the ego. Compare with a given threshold
+      if((check_car_s > this->s) && ((check_car_s - this->s) < 30)){
+
+        too_close = true;
+      }
+
+      if((check_car_s > this->s) && ((check_car_s - this->s) < 10)){
+
+        emergency_brake = true;
+      }
+    }
+  }
+
+  // if we're too close slow down
+  if (too_close == true){
+    if (emergency_brake == true){
+      std::cout<< "EMERGENCY BRAKE"<<std::endl;
+      ref_vel -= 1;
+    }
+    else{
+      std::cout<< "SLOWING DOWN"<<std::endl;
+      ref_vel -= 0.224;
+    }
+  }
+  else if (ref_vel < 49.5){
+    std::cout<< "ACCELERATING"<<std::endl;
+    ref_vel+= 0.224;
+  }
+  else{
+    std::cout<< "MAINTAINING SPEED"<<std::endl;
+    if (init_acc_over == false){
+      init_acc_over = true;
+    }
+  }
+
+  if (ref_vel <= 0){
+    ref_vel = 0.0;
+  }
+}
+
+
+/**
+ * Define possible successor states, based on Finite State Machine for Ego Vehicle
+ * Possible states = "KL' (Keep Lane)
+ *                   "LCR" (Lane Change Right)
+ *                   "LCL" (Lane Change Left)
+ *
+ * @output successorStates = vector of strings isentifying the possible successor states
+ */
 vector<string> Vehicle::successorStates() {
   // Provides the possible next states given the current state for the FSM
   vector<string> states;
@@ -447,11 +504,19 @@ vector<string> Vehicle::successorStates() {
 }
 
 
-
+/**
+  * Generate predicted trajectory for non-Ego vehicle
+  *
+  * @param map_s_waypoints = vector of reference waypoints in Frenet s coordinates
+  * @param map_x_waypoints = vector of reference waypoints in Cartesian x coordinates
+  * @param map_y_waypoints = vector of reference waypoints in Cartesian y coordinates
+  * @param map_y_length = length of the trajectory (num. of samples to propagate)
+  *
+  * @output generatePredictions = vector of vehicles representing the trajectory
+  */
 vector<Vehicle> Vehicle::generatePredictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
    const vector<double> &map_y_waypoints, int pred_size) {
-  // Generates predictions for non-ego vehicles to be used in trajectory
-  //   generation for the ego vehicle.
+  // Generates predictions for non-ego vehicles to be used in trajectory generation for the ego vehicle.
   // Hyp: constant speed for the length of the trajectory
 
   vector<Vehicle> predictions;

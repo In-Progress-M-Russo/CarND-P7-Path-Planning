@@ -18,6 +18,7 @@ class Vehicle {
    */
   Vehicle();
 
+
   /**
    * Constructor with parameters
    *
@@ -31,6 +32,7 @@ class Vehicle {
    * @param state = state of the vehicle (default = "CS")
    */
   Vehicle(int lane, float s, float d, float v, float a, float x, float y, float yaw, string state="CS");
+
 
   /**
    * Destructor
@@ -58,6 +60,7 @@ class Vehicle {
                               const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
                               double r_vel, int target_lane);
 
+
   /**
    * Implement a Trajectory
    *
@@ -81,6 +84,7 @@ class Vehicle {
                                const vector<double> &map_y_waypoints, double &r_vel, int current_lane,
                                bool &init_acc_over);
 
+
   /**
    * Regulate Velocity
    *
@@ -90,6 +94,7 @@ class Vehicle {
    * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
    */
   void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
+
 
   /**
    * Define possible successor states, based on Finite State Machine for Ego Vehicle
@@ -101,6 +106,7 @@ class Vehicle {
    */
   vector<string> successorStates();
 
+
   /**
    * Generate predicted trajectory for non-Ego vehicle
    *
@@ -109,7 +115,7 @@ class Vehicle {
    * @param map_y_waypoints = vector of reference waypoints in Cartesian y coordinates
    * @param map_y_length = length of the trajectory (num. of samples to propagate)
    *
-   * @output generatePredictions = vector of vehicles representing the trajectory 
+   * @output generatePredictions = vector of vehicles representing the trajectory
    */
   vector<Vehicle> generatePredictions(const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints,
                           const vector<double> &map_y_waypoints,int length);
