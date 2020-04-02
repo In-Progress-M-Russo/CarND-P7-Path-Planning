@@ -66,7 +66,30 @@ This is just the parsing of the various items in the message coming from the sim
 ## Path Planning
 The actual Path Planning phase starts on line 117. 
 
-Both the Ego vehicle and the others on the road will be represented through the `Vehicle` object defined in [`Vehicle.h`](./src/vehicle.h) and [`Vehicle.cpp`](./src/vehicle.cpp). The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines (128-130):
+Both the Ego vehicle and the others on the road will be represented through the `Vehicle` object.
+
+### _Vehicle Class_
+The vehicle class is defined through [`Vehicle.h`](./src/vehicle.h) and [`Vehicle.cpp`](./src/vehicle.cpp), and is the class containing the main methods. It is based on the definition of a `Vehicle` object identified by some fundamental attribute, as it can be seen from the contructor:
+
+```sh
+ /**
+   * Constructor with parameters
+   *
+   * @param lane = id for the lane occupied by the vehicle
+   * @param s = longitudinal Frenet coordinates for the vehicle
+   * @param d = transverse Frenet coordinates for the vehicle
+   * @param v = speed of the vehicle (in m/s)
+   * @param a = acceleration of the vehicle
+   * @param x = x-coordinate of the vehicle
+   * @param y = y-coordinate of the vehicle
+   * @param state = state of the vehicle (default = "CS")
+   */
+  Vehicle(int lane, float s, float d, float v, float a, float x, float y, float yaw, string state="CS");
+```
+
+These attributes will then be used by the various methods, to identify a feasible trajectory.
+
+The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines (128-130):
 
 ```sh
    // Maps to be filled with the vehicles in the scene and their possible trajectories
@@ -74,10 +97,10 @@ Both the Ego vehicle and the others on the road will be represented through the 
    map<int ,vector<Vehicle> > predictions;
 ```
 
-The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories.
+The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories. The trajectory prediction is executed by the `generatePredictions` method in the Vehicle class, that for every vehicle observed, propagate a brief (30 sampling points) trajectory under the assumption of *constant speed*. 
+the trajectories will be evaulated by the FSM and a cost will be associated with them.
 
-### _Vehicle class_
-
+### _The Finite States Machine (FSM)_
 
 ## Trajectory Definition
 The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
