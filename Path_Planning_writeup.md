@@ -69,7 +69,7 @@ The actual Path Planning phase starts on line 117.
 Both the Ego vehicle and the others on the road will be represented through the `Vehicle` object.
 
 ### _Vehicle Class_
-The vehicle class is defined through [`Vehicle.h`](./src/vehicle.h) and [`Vehicle.cpp`](./src/vehicle.cpp), and is the class containing the main methods. It is based on the definition of a `Vehicle` object identified by some fundamental attribute, as it can be seen from the contructor:
+The vehicle class is defined through [`vehicle.h`](./src/vehicle.h) and [`vehicle.cpp`](./src/vehicle.cpp), and is the class containing the main methods. It is based on the definition of a `Vehicle` object identified by some fundamental attribute, as it can be seen from the contructor:
 
 ```sh
  /**
@@ -110,7 +110,7 @@ State | Definition
 
 * The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
 * Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
-* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH. See, for example, the LCL use case in the `implementNextTrajectory` method in [`Vehicle.cpp`](./src/vehicle.cpp), lines 154-155: 
+* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH. See, for example, the LCL use case in the `implementNextTrajectory` method in [`vehicle.cpp`](./src/vehicle.cpp), lines 154-155: 
 
 ```sh
      // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
@@ -120,8 +120,12 @@ State | Definition
 
 * In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively.
 
-## Trajectory Definition
+### _Trajectory Definition_
 The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
+
+The most notable features of the approach are:
+
+* Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Spline are implemented using resources available at http://kluge.in-chemnitz.de/opensource/spline/; the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
 
 
 ---
@@ -188,9 +192,7 @@ the path has processed since last time.
 
 2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
-## Tips
 
-A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
 
 ---
 
