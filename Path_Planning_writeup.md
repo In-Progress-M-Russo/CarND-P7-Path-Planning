@@ -3,7 +3,7 @@ The goal of this project is the implementation, in C++, of a path planning algor
 
 The source code is contained in the [src](./src) folder in this git repo. It is the evolution of a starter project provided directly by Udacity, where the [`main.cpp`](./src/main.cpp) file was modified and few files (most notably [`vehicle.cpp`](./src/vehicle.cpp) and [`vehicle.h`](./src/vehicle.h)) were added.
 
-The following sections of this writeup will provide details on the filter operations and the data flow, and in doing so the fundamental pieces of the code will be explained. A final Results section will show the outcomes of the path planner running. 
+The following sections of this writeup will provide details on the filter operations and the data flow, and in doing so the fundamental pieces of the code will be explained. A final Results](Path_Planning_writeup.md#Results) section will show the outcomes of the path planner running. 
 
 ---
 ## Data Input
@@ -105,6 +105,8 @@ The definition of the trajectories makes use of what explained in the Udacity [v
 The most notable features of the approach are:
 
 * Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Splines are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
+* At every planning step, the generated trajectory is an extension of the previous path data given to the Planner. This is part of the message provided by the simulator (see previous section) and using it avoids discontinuities in the generation process.
+ 
 
 ### _The Finite States Machine (FSM)_
 In every moment the trajectory to follow is picked based on a simple FSM that normally considers only 3 states:
