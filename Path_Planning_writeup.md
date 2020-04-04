@@ -125,7 +125,7 @@ The definition of the trajectories makes use of what explained in the Udacity [v
 
 The most notable features of the approach are:
 
-* Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Spline are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
+* Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Splines are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
 
 
 ---
