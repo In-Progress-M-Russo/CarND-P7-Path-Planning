@@ -15,7 +15,7 @@ A map of the highway is also provided in the [`highway_map.txt`](./data/highway_
 
 Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
 
-The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
+The highway's waypoints loop around so the Frenet s value, distance along the road, goes from 0 to 6945.554.
 
 ---
 ## Code Structure
@@ -108,8 +108,10 @@ State | Definition
 `LCL` | Lane Change to the Left
 `LCR` | Lane Change to the Right
 
-The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
-Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
+* The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
+* Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
+* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH.
+* In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively.
 
 ## Trajectory Definition
 The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
