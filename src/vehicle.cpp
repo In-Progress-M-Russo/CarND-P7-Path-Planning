@@ -251,7 +251,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       float min_dist_LCL = 999999.9;
       float dist_LCL = 0.0;
-      float ref_dist_LCL = (49.5/std::max(r_vel,0.1))*10.0;
+      // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
+      float ref_dist_LCL = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
       std::cout << "Ref dist_LCL = " << ref_dist_LCL << std::endl;
 
       // loop over predictions to check collision
@@ -316,7 +317,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       float min_dist_LCR = 999999.9;
       float dist_LCR= 0.0;
-      float ref_dist_LCR = (49.5/std::max(r_vel,0.1))*10.0;
+      // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
+      float ref_dist_LCR = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
       std::cout << "Ref dist_LCR = " << ref_dist_LCR << std::endl;
 
       // loop over predictions to check collision

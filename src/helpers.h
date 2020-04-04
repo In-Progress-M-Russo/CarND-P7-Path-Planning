@@ -5,6 +5,9 @@
 const float DELTA_T = 0.02;
 const float LANE_WIDTH = 4.0;
 const float MPH2MS = 0.44704;
+const float REF_SPEED = 49.5;
+const float REF_DIST_LC = 10.0;
+
 
 #include <math.h>
 #include <string>
