@@ -110,7 +110,14 @@ State | Definition
 
 * The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
 * Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
-* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH.
+* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH. See, for example, the LCL use case in the `implementNextTrajectory` method in [`Vehicle.cpp`](./src/vehicle.cpp), lines 154-155: 
+
+```sh
+     // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
+     float ref_dist_LCL = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
+```
+*NOTE* some constants (`REF_SPEED`, `REF_DIST_LC` are definied, together with helper methods in [`helpers.h`](./src/helpers.h).
+
 * In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively.
 
 ## Trajectory Definition
