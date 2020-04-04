@@ -99,6 +99,13 @@ The conditions of the vehicle on the road will be defined through 2 maps defined
 
 The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories. The trajectory prediction is executed by the `generatePredictions` method in the Vehicle class, that for every vehicle observed, propagate a brief (30 sampling points) trajectory under the assumption of **constant speed**.
 
+### _Trajectory Definition_
+The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
+
+The most notable features of the approach are:
+
+* Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Splines are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
+
 ### _The Finite States Machine (FSM)_
 In every moment the trajectory to follow is picked based on a simple FSM that normally considers only 3 states:
 
@@ -119,14 +126,6 @@ State | Definition
 *NOTE*: Some constants (`REF_SPEED`, `REF_DIST_LC` are defined together with helper methods in [`helpers.h`](./src/helpers.h).
 
 * In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively.
-
-### _Trajectory Definition_
-The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
-
-The most notable features of the approach are:
-
-* Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Splines are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
-
 
 ---
 ## Results
