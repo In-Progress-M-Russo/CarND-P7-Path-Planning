@@ -105,9 +105,9 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
     }
 
   // future points
-  vector<double> next_wp0 = getXY(car_s + 30,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
-  vector<double> next_wp1 = getXY(car_s + 60,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
-  vector<double> next_wp2 = getXY(car_s + 90,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp0 = getXY(car_s + TRAJ_HORIZ_1,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp1 = getXY(car_s + TRAJ_HORIZ_2,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
+  vector<double> next_wp2 = getXY(car_s + TRAJ_HORIZ_3,((LANE_WIDTH/2)+LANE_WIDTH*target_lane),map_s_waypoints,map_x_waypoints,map_y_waypoints);
 
   ptsx.push_back(next_wp0[0]);
   ptsx.push_back(next_wp1[0]);
@@ -131,7 +131,7 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
   s.set_points(ptsx,ptsy);
 
   //respace according to target vel
-  double target_x = 30.0;
+  double target_x = TRAJ_HORIZ_1;
   double target_y = s(target_x);
   double target_distance = distance(0,0,target_x,target_y);
 
@@ -140,7 +140,7 @@ void Vehicle::generateXYTrajectory(vector<double> &next_vals_x, vector<double> &
   // add them to path
   for (int i = 1; i <= 50 - previous_x_path.size(); i++){
 
-    double N = target_distance/(DELTA_T*r_vel/2.24);
+    double N = target_distance/(DELTA_T*r_vel*MPH2MS);
     double x_point = x_add_on + target_x/N;
     double y_point = s(x_point);
 
@@ -197,15 +197,15 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
   double current_KL_vel = r_vel;
 
-  bool coll_event_LCL = false;
-  bool coll_event_LCR = false;
+  bool coll_event_LCL;
+  bool coll_event_LCR;
 
   vector<string> states = successorStates();
 
   for (vector<string>::iterator it = states.begin(); it != states.end(); ++it) {
     if (it->compare("KL") == 0)
     {
-      std::cout<< "KL Traj"<< std::endl;
+      // Trajectory for Keep Lane case
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -232,8 +232,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
     else if (it->compare("LCL") ==0)
     {
-      std::cout<< "LCL Traj"<< std::endl;
-
+      // Trajectory for Lane Change Left case
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -249,11 +248,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       num_traj += 1;
 
-      float min_dist_LCL = 999999.9;
+      float min_dist_LCL = 999999.9;  // Initialize to big number
       float dist_LCL = 0.0;
       // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
       float ref_dist_LCL = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
-      std::cout << "Ref dist_LCL = " << ref_dist_LCL << std::endl;
 
       // loop over predictions to check collision
       int j = 0;
@@ -286,8 +284,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
-      std::cout << "LCL Collision check - min dist_LCL = " << min_dist_LCL << std::endl;
-
       if (coll_event_LCL){
         costs.push_back(1.1);
       } else {
@@ -298,8 +294,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
     else if (it->compare("LCR") == 0)
     {
-      std::cout<< "LCR Traj"<< std::endl;
-
+      // Trajectory for Lane Change Right case
       genericTrajX.clear();
       genericTrajY.clear();
       
@@ -315,11 +310,10 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       num_traj += 1;
 
-      float min_dist_LCR = 999999.9;
+      float min_dist_LCR = 999999.9;  // Initialize to big number
       float dist_LCR= 0.0;
       // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
       float ref_dist_LCR = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
-      std::cout << "Ref dist_LCR = " << ref_dist_LCR << std::endl;
 
       // loop over predictions to check collision
       int j = 0;
@@ -351,8 +345,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         }
         j += 1;
       }
-
-      std::cout << "LCR Collision check - min dist_LCR = " << min_dist_LCR << std::endl;
 
       if (coll_event_LCR){
         costs.push_back(1.2);

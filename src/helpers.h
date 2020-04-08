@@ -5,11 +5,13 @@
 const float DELTA_T = 0.02;             // Sampling time for the simulator
 const float LANE_WIDTH = 4.0;           // Lane width
 const float MPH2MS = 0.44704;           // Conversion factor between MPH and m/s
-const float REF_SPEED = 49.5;           // Reference speed for the Ego vehicle
-const float REF_SPEED_CHANGE = 0.224;   // Reference acceleration/deceleration to apply to Ego
-const float EMG_SPEED_CHANGE = 1;       // Emergengy deceleration to apply to Ego
-const float REF_DIST_LC = 10.0;         // Reference minumum distance for Lane Change collision check
-
+const float REF_SPEED = 49.5;           // Reference speed for the Ego vehicle (MPH)
+const float REF_SPEED_CHANGE = 0.224;   // Reference spped change to apply to Ego (MPH)
+const float EMG_SPEED_CHANGE = 1;       // Emergengy speed_change to apply to Ego (MPH)
+const float REF_DIST_LC = 10.0;         // Reference minimum distance for Lane Change collision check (m)
+const float TRAJ_HORIZ_1 = 30.0;        // Horizon to be used for spline traj definition (m, 1/3)
+const float TRAJ_HORIZ_2 = 60.0;        // Horizon to be used for spline traj definition (m, 2/3)
+const float TRAJ_HORIZ_3 = 90.0;        // Horizon to be used for spline traj definition (m, 3/3)
 
 #include <math.h>
 #include <string>

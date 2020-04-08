@@ -203,7 +203,7 @@ int main() {
             vehicles.insert(std::pair<int,Vehicle>(l,vehicle));
 
             // Create predicted trajectory
-            int pred_path_length = 30;
+            int pred_path_length = 30;  // Number of samples to consider for the prediction
             vector<Vehicle> preds = vehicle.generatePredictions(map_waypoints_s, map_waypoints_x, map_waypoints_y,
               pred_path_length);
 
@@ -211,16 +211,11 @@ int main() {
           }
 
           // 2. Change Ego state based on predictions
-
-          std::cout << "Vehicle state - pre: " << ego_state << std::endl;
-
           ego_vehicle.implementNextTrajectory(vehicles, predictions, next_x_vals, next_y_vals, previous_path_x, previous_path_y,
                                                 map_waypoints_s, map_waypoints_x, map_waypoints_y, ref_vel, sensed_ego_lane,
                                                 init_acc_over);
 
           ego_state = ego_vehicle.state;
-
-          std::cout << "Vehicle state - post: " << ego_state << std::endl;
 
           ego_goal_lane = ego_vehicle.goal_lane;
 
