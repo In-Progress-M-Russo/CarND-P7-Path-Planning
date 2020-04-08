@@ -2,11 +2,13 @@
 #define HELPERS_H
 
 // CONSTANTS
-const float DELTA_T = 0.02;
-const float LANE_WIDTH = 4.0;
-const float MPH2MS = 0.44704;
-const float REF_SPEED = 49.5;
-const float REF_DIST_LC = 10.0;
+const float DELTA_T = 0.02;             // Sampling time for the simulator
+const float LANE_WIDTH = 4.0;           // Lane width
+const float MPH2MS = 0.44704;           // Conversion factor between MPH and m/s
+const float REF_SPEED = 49.5;           // Reference speed for the Ego vehicle
+const float REF_SPEED_CHANGE = 0.224;   // Reference acceleration/deceleration to apply to Ego
+const float EMG_SPEED_CHANGE = 1;       // Emergengy deceleration to apply to Ego
+const float REF_DIST_LC = 10.0;         // Reference minumum distance for Lane Change collision check
 
 
 #include <math.h>

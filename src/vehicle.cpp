@@ -364,11 +364,6 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     }
   }
 
-  // display costs
-
-//  for (std::vector<double>::iterator it = costs.begin() ; it != costs.end(); ++it){
-//    std::cout<<"Cost vector: "<< *it << std::endl;
-//  }
   // find lower cost
   int min_cost_index = min_element(costs.begin(), costs.end()) - costs.begin();
 
@@ -434,23 +429,23 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
     }
   }
 
-  // if we're too close slow down
+  // If too close slow down
   if (too_close == true){
     if (emergency_brake == true){
-      std::cout<< "EMERGENCY BRAKE"<<std::endl;
-      ref_vel -= 1;
+      // std::cout<< "EMERGENCY BRAKE"<<std::endl;
+      ref_vel -= EMG_SPEED_CHANGE;
     }
     else{
-      std::cout<< "SLOWING DOWN"<<std::endl;
-      ref_vel -= 0.224;
+      // std::cout<< "SLOWING DOWN"<<std::endl;
+      ref_vel -= REF_SPEED_CHANGE;
     }
   }
-  else if (ref_vel < 49.5){
-    std::cout<< "ACCELERATING"<<std::endl;
-    ref_vel+= 0.224;
+  else if (ref_vel < REF_SPEED){
+    // std::cout<< "ACCELERATING"<<std::endl;
+    ref_vel+= REF_SPEED_CHANGE;
   }
   else{
-    std::cout<< "MAINTAINING SPEED"<<std::endl;
+    // std::cout<< "MAINTAINING SPEED"<<std::endl;
     if (init_acc_over == false){
       init_acc_over = true;
     }
