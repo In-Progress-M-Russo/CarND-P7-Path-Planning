@@ -3,7 +3,7 @@ The goal of this project is the implementation, in C++, of a path planning algor
 
 The source code is contained in the [src](./src) folder in this git repo. It is the evolution of a starter project provided directly by Udacity, where the [`main.cpp`](./src/main.cpp) file was modified and few files (most notably [`vehicle.cpp`](./src/vehicle.cpp) and [`vehicle.h`](./src/vehicle.h)) were added.
 
-The following sections of this writeup will provide details on the filter operations and the data flow, and in doing so the fundamental pieces of the code will be explained. A final Results](Path_Planning_writeup.md#Results) section will show the outcomes of the path planner running. 
+The following sections of this writeup will provide details on the filter operations and the data flow, and in doing so the fundamental pieces of the code will be explained. A final [Results](Path_Planning_writeup.md#Results) section will show the outcomes of the path planner running. 
 
 ---
 ## Data Input
