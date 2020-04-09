@@ -56,9 +56,10 @@ class Vehicle {
    * @param r_vel = reference speed of the vehicle (in mph)
    * @param target_lane = id for the target lane
    */
-  void generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path, vector<double> &previous_y_path,
-                              const vector<double> &map_s_waypoints, const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
-                              double r_vel, int target_lane);
+  void generateXYTrajectory(vector<double> &next_vals_x, vector<double> &next_vals_y, vector<double> &previous_x_path,
+                            vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
+                            const vector<double> &map_x_waypoints, const vector<double> &map_y_waypoints,
+                            double r_vel, int target_lane);
 
 
   /**
@@ -77,7 +78,8 @@ class Vehicle {
    * @param current_lane = id for the current lane
    * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
    */
-  void implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions, vector<double> &next_vals_x, vector<double> &next_vals_y,
+  void implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vector<Vehicle> > &predictions,
+                               vector<double> &next_vals_x, vector<double> &next_vals_y,
                                vector<double> &previous_x_path,
                                vector<double> &previous_y_path, const vector<double> &map_s_waypoints,
                                const vector<double> &map_x_waypoints,
@@ -90,10 +92,13 @@ class Vehicle {
    *
    * @param vehicles = map of non-ego vehicles
    * @param ref_vel = reference speed of the vehicle (in mph)
+   * @param current_lane = id of current lane where to check the position of other vehicles
+   * @param target_lane = id of target lane where to check the position of other vehicles
    * @param previous_path_x = vector of x-coordinates for the PREVIOUS trajectory
    * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
    */
-  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, vector<double> &previous_path_x, bool &init_acc_over);
+  void regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, int current_lane, int target_lane,
+                        vector<double> &previous_path_x, bool &init_acc_over);
 
 
   /**

@@ -196,6 +196,8 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   int target_lane = current_lane;
 
   double current_KL_vel = r_vel;
+  double current_LCL_vel = r_vel;
+  double current_LCR_vel = r_vel;
 
   bool coll_event_LCL;
   bool coll_event_LCR;
@@ -206,11 +208,16 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     if (it->compare("KL") == 0)
     {
       // Trajectory for Keep Lane case
+      std::cout<<"KL Traj"<<std::endl;
+
       genericTrajX.clear();
       genericTrajY.clear();
 
-      regulateVelocity(vehicles, current_KL_vel, previous_x_path, init_acc_over);
-      //
+      // Check if speed needs changing (possible collision ahead)
+      // NOTE - for KL state target_lane = current_lane
+      regulateVelocity(vehicles, current_KL_vel, current_lane, current_lane, previous_x_path, init_acc_over);
+
+      // Generate a trajectory
       generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
                            map_s_waypoints, map_x_waypoints, map_y_waypoints, current_KL_vel, current_lane);
 
@@ -233,14 +240,19 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     else if (it->compare("LCL") ==0)
     {
       // Trajectory for Lane Change Left case
+      std::cout<<"LCRL Traj"<<std::endl;
       genericTrajX.clear();
       genericTrajY.clear();
 
       if (current_lane>0) {
         target_lane = current_lane - 1;
 
+        // Check if speed needs changing (possible collision ahead)
+        regulateVelocity(vehicles, current_LCL_vel, current_lane, target_lane, previous_x_path, init_acc_over);
+
+        // Generate a trajectory
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
-                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, current_LCL_vel, target_lane);
       }
 
       genericTrajsX.insert(std::pair<int, vector<double>>(num_traj, genericTrajX));
@@ -284,7 +296,9 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
+      // Assign cost
       if (coll_event_LCL){
+        std::cout<<"LCL Collision Detected"<<std::endl;
         costs.push_back(1.1);
       } else {
         costs.push_back(0.1);
@@ -295,14 +309,19 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     else if (it->compare("LCR") == 0)
     {
       // Trajectory for Lane Change Right case
+      std::cout<<"LCR Traj"<<std::endl;
       genericTrajX.clear();
       genericTrajY.clear();
       
       if (current_lane<2){
         target_lane = current_lane + 1;
 
+        // Check if speed needs changing (possible collision ahead)
+        regulateVelocity(vehicles, current_LCR_vel, current_lane, target_lane, previous_x_path, init_acc_over);
+
+        // Generate a trajectory
         generateXYTrajectory(genericTrajX, genericTrajY, previous_x_path, previous_y_path,
-                             map_s_waypoints, map_x_waypoints, map_y_waypoints, r_vel, target_lane);
+                             map_s_waypoints, map_x_waypoints, map_y_waypoints, current_LCR_vel, target_lane);
       }
 
       genericTrajsX.insert(std::pair<int, vector<double>>(num_traj, genericTrajX));
@@ -346,7 +365,9 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
         j += 1;
       }
 
+      // Assign cost
       if (coll_event_LCR){
+        std::cout<<"LCR Collision Detected"<<std::endl;
         costs.push_back(1.2);
       } else{
         costs.push_back(0.2);
@@ -368,6 +389,12 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
   if (this->state == "KL"){
     r_vel = current_KL_vel;
   }
+  else if (this->state == "LCL"){
+    r_vel = current_LCL_vel;
+  }
+  else if (this->state == "LCR"){
+    r_vel = current_LCR_vel;
+  }
 }
 
 
@@ -376,10 +403,12 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
  *
  * @param vehicles = map of non-ego vehicles
  * @param ref_vel = reference speed of the vehicle (in mph)
+ * @param current_lane = id of current lane where to check the position of other vehicles
+ * @param target_lane = id of target lane where to check the position of other vehicles
  * @param previous_path_x = vector of x-coordinates for the PREVIOUS trajectory
  * @param init_acc_over = boolean flag that indicates the termination of the intial acceleration phase
  */
-void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
+void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, int current_lane, int target_lane,
                                vector<double> &previous_path_x, bool &init_acc_over) {
 
   // First of all let's check if there's a chance of getting too close
@@ -395,8 +424,8 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
     // Get lane for the vehicle
     int ln = it->second.lane;
 
-    // Check if there's a car in the ego lane
-    if (ln == this->lane){
+    // Check if there's a car in the ego current OR target lane
+    if (ln == current_lane || ln == target_lane){
       // there is a car in the same lane as ego: calculate its velocity
       double check_speed = it->second.v;
 
@@ -424,20 +453,20 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel,
   // If too close slow down
   if (too_close == true){
     if (emergency_brake == true){
-      // std::cout<< "EMERGENCY BRAKE"<<std::endl;
+      std::cout<< "EMERGENCY BRAKE"<<std::endl;
       ref_vel -= EMG_SPEED_CHANGE;
     }
     else{
-      // std::cout<< "SLOWING DOWN"<<std::endl;
+      std::cout<< "SLOWING DOWN"<<std::endl;
       ref_vel -= REF_SPEED_CHANGE;
     }
   }
   else if (ref_vel < REF_SPEED){
-    // std::cout<< "ACCELERATING"<<std::endl;
+    std::cout<< "ACCELERATING"<<std::endl;
     ref_vel+= REF_SPEED_CHANGE;
   }
   else{
-    // std::cout<< "MAINTAINING SPEED"<<std::endl;
+    std::cout<< "MAINTAINING SPEED"<<std::endl;
     if (init_acc_over == false){
       init_acc_over = true;
     }
