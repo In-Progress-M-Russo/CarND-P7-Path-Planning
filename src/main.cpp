@@ -5,8 +5,6 @@
 #include <vector>
 #include <iterator>
 #include <map>
-#include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "vehicle.h"
 
