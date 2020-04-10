@@ -208,7 +208,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     if (it->compare("KL") == 0)
     {
       // Trajectory for Keep Lane case
-      std::cout<<"KL Traj"<<std::endl;
+      // std::cout<<"KL Traj"<<std::endl;  // Uncomment for printout/debug
 
       genericTrajX.clear();
       genericTrajY.clear();
@@ -240,7 +240,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     else if (it->compare("LCL") ==0)
     {
       // Trajectory for Lane Change Left case
-      std::cout<<"LCRL Traj"<<std::endl;
+      // std::cout<<"LCRL Traj"<<std::endl;  // Uncomment for printout/debug
       genericTrajX.clear();
       genericTrajY.clear();
 
@@ -298,7 +298,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       // Assign cost
       if (coll_event_LCL){
-        std::cout<<"LCL Collision Detected"<<std::endl;
+        // std::cout<<"LCL Collision Detected"<<std::endl; // Uncomment for printout/debug
         costs.push_back(1.1);
       } else {
         costs.push_back(0.1);
@@ -309,7 +309,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
     else if (it->compare("LCR") == 0)
     {
       // Trajectory for Lane Change Right case
-      std::cout<<"LCR Traj"<<std::endl;
+      // std::cout<<"LCR Traj"<<std::endl; // Uncomment for printout/debug
       genericTrajX.clear();
       genericTrajY.clear();
       
@@ -367,7 +367,7 @@ void Vehicle::implementNextTrajectory(map<int, Vehicle> &vehicles, map<int ,vect
 
       // Assign cost
       if (coll_event_LCR){
-        std::cout<<"LCR Collision Detected"<<std::endl;
+        // std::cout<<"LCR Collision Detected"<<std::endl;  // Uncomment for printout/debug
         costs.push_back(1.2);
       } else{
         costs.push_back(0.2);
@@ -453,20 +453,20 @@ void Vehicle::regulateVelocity(map<int, Vehicle> &vehicles, double &ref_vel, int
   // If too close slow down
   if (too_close == true){
     if (emergency_brake == true){
-      std::cout<< "EMERGENCY BRAKE"<<std::endl;
+      // std::cout<< "EMERGENCY BRAKE"<<std::endl;  // Uncomment for printout/debug
       ref_vel -= EMG_SPEED_CHANGE;
     }
     else{
-      std::cout<< "SLOWING DOWN"<<std::endl;
+      // std::cout<< "SLOWING DOWN"<<std::endl;  // Uncomment for printout/debug
       ref_vel -= REF_SPEED_CHANGE;
     }
   }
   else if (ref_vel < REF_SPEED){
-    std::cout<< "ACCELERATING"<<std::endl;
+    // std::cout<< "ACCELERATING"<<std::endl;  // Uncomment for printout/debug
     ref_vel+= REF_SPEED_CHANGE;
   }
   else{
-    std::cout<< "MAINTAINING SPEED"<<std::endl;
+    // std::cout<< "MAINTAINING SPEED"<<std::endl;  // Uncomment for printout/debug
     if (init_acc_over == false){
       init_acc_over = true;
     }

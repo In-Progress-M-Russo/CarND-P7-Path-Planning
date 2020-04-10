@@ -148,7 +148,7 @@ int main() {
 
           // Setting of the current state
           ego_vehicle.state = ego_state;
-          std::cout<< "State - PRE: " << ego_state << std::endl;
+          // std::cout<< "State - PRE: " << ego_state << std::endl;  // Uncomment for printout/debug
 
           // set of the current goal lane
           ego_vehicle.goal_lane = ego_goal_lane;
@@ -215,7 +215,7 @@ int main() {
                                                 init_acc_over);
 
           ego_state = ego_vehicle.state;
-          std::cout<< "State - POST: " << ego_state << std::endl;
+          // std::cout<< "State - POST: " << ego_state << std::endl;  // Uncomment for printout/debug
 
           ego_goal_lane = ego_vehicle.goal_lane;
 
