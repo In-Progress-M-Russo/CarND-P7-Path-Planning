@@ -136,10 +136,17 @@ State | Definition
 ## Results
 Examples of the trajectories enabled by this path planner can be found in the following videos:
 
-<div align="center">[![Example 1](http://img.youtube.com/vi/RVlWi51o3y8/0.jpg)](https://www.youtube.com/watch?v=RVlWi51o3y8 "Example 1")</div>
+[![Example 1](http://img.youtube.com/vi/RVlWi51o3y8/0.jpg)](https://www.youtube.com/watch?v=RVlWi51o3y8 "Example 1")
 
 [![Example 2](http://img.youtube.com/vi/K7TrOyOc7bk/0.jpg)](https://www.youtube.com/watch?v=K7TrOyOc7bk "Example 2")
 
----
+In both cases (relative to different simulated scenario) is possible to see how the current path planner implementationa reaches the intended target of driving for around 5 miles along the track without accidents (collision or eccessive accelerations/jerks).
 
+Of course this does not mean that improvements are not possible. Few options could be:
 
+* Improve the FSM both in the sense of including preparatory states before the actual LCL/LCR (to allow more complex maneuvers), and refine the definition of the cost functions. Examples could include the evaluation of the speed in the lanes (so to change towards the faster) or the actual distance to a vehicle in front _after_ the change takes place (so to change towards the one with the bigger distance as an indicator of safety).
+* Remove/modify the hypothesis of constant speed for other vehicles when projecting their trajectories. This could be done by storing their past states and building some different models for their behavior. The current hypothesis is indeed _not_ respected by the simulator, and, even if working in the majority of cases (given the limited time horizon for the projection) it required the introduction of an "emergency brake" feature in the velocity regulation section, so to deal with sudden lane changes of the preceding vehicles. An example of such a scenario is shown in the following video (t = 3 min):
+
+[![Emergency Brake Example](http://img.youtube.com/vi/a1XyU_aDV-s/0.jpg)](https://www.youtube.com/watch?v=a1XyU_aDV-s "Emergency Brake Example")
+
+* Improve the velocity regulation mechanism. At the moment the seqence of acceleration/deceleration phases can lead to some sort of "yo-yo" motion (visible in all the videos above) when lane changes are not possible and the vehicle ahead is slower than the ref. speed. This mechanism could be modified to allow the Ego vehicle to change its reference speed to the one of the lane it's in, when changes are not possible.
