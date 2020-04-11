@@ -19,7 +19,7 @@ The highway's waypoints loop around so the Frenet s value, distance along the ro
 
 ---
 ## Code Structure
-The code in [`main.cpp`](./src/main.cpp) has been modified mostly regarding the `onMessage` lambda function that gets ionvoked when a new message is available through the WebSocket connection open with the simulator (lines 72-243):
+The code in [`main.cpp`](./src/main.cpp) has been modified mostly regarding the `onMessage` lambda function that gets ionvoked when a new message is available through the WebSocket connection open with the simulator (lines 70-236):
 
 ```sh
     h.onMessage([&ref_vel, &max_s, &ego_state, &ego_goal_lane, &init_acc_over,
