@@ -64,12 +64,12 @@ This is just the parsing of the various items in the message coming from the sim
 ```
 
 ## Path Planning
-The actual Path Planning phase starts on line 117. 
+The actual Path Planning phase starts on line 115. 
 
 Both the Ego vehicle and the others on the road will be represented as `Vehicle` objects.
 
 ### _Vehicle Class_
-The vehicle class is defined through [`vehicle.h`](./src/vehicle.h) and [`vehicle.cpp`](./src/vehicle.cpp), and is the class containing the main methods for trajectory projection and selection. It is based on the definition of a `Vehicle` object identified by some fundamental attributes, as it can be seen from the contructor:
+The Vehicle class is defined through [`vehicle.h`](./src/vehicle.h) and [`vehicle.cpp`](./src/vehicle.cpp), and is the class containing the main methods for trajectory projection and selection. It is based on the definition of a `Vehicle` object identified by some fundamental attributes, as it can be seen from the contructor:
 
 ```sh
  /**
@@ -87,9 +87,9 @@ The vehicle class is defined through [`vehicle.h`](./src/vehicle.h) and [`vehicl
   Vehicle(int lane, float s, float d, float v, float a, float x, float y, float yaw, string state="CS");
 ```
 
-These attributes will then be used by the various methods, to identify a feasible trajectory.
+These attributes will then be used by the various methods to identify a feasible trajectory.
 
-The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines 128-130:
+The conditions of the vehicle on the road will be defined through 2 maps defined in `main.cpp` on lines 126-128:
 
 ```sh
    // Maps to be filled with the vehicles in the scene and their possible trajectories
@@ -100,17 +100,18 @@ The conditions of the vehicle on the road will be defined through 2 maps defined
 The first one will be a snapshot of the vehicles as sensed, the second will contain some extrapolations of possible trajectories. The trajectory prediction is executed by the `generatePredictions` method in the Vehicle class, that for every vehicle observed, propagate a brief (30 sampling points) trajectory under the assumption of **constant speed**.
 
 ### _Trajectory Definition_
-The definition of the trajectories makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project. 
+The definition of the trajectories is contained in the `generateXYTrajectory` method of the Vehicle class ([`vehicle.cpp`](/src/vehicle.cpp), lines 61-161) and makes use of what explained in the Udacity [video](https://www.youtube.com/watch?v=7sI3VHFPP0w&feature=emb_logo) supporting the project.
 
 The most notable features of the approach are:
 
 * Trajectories are defined as splines. Even if not formally proven as for the 5th order polynomial case, this solution has demonstrated to be capable of satisfying requirements on smoothness of the trajectory, avoing spikes in acceleration and jerk. Splines are implemented using resources available [here](http://kluge.in-chemnitz.de/opensource/spline/); the spline function is in a single header file ([`spline.h`](./src/spline.h)). 
 * At every planning step, the generated trajectory is an extension of the previous path data given to the Planner. This is part of the message provided by the simulator (see previous section) and using it avoids discontinuities in the generation process.
-* Part of the trajectory projection includes a check for possible collision with a vehicle ahead on the same lane: if that's the case the reference velocity of the Ego vehicle gets modified, in order to slow it doown and avoid the collision. 
+* Part of the trajectory projection includes a check for possible collision with a vehicle ahead on the same lane: if that's the case the reference velocity of the Ego vehicle gets modified, in order to slow it doown and avoid the collision. Velocity regulation is contained in the `regulateVelocity` method ([`vehicle.cpp`](/src/vehicle.cpp), lines 411-478). 
+* An initial acceleration phase is also foreseen to allow the Ego vehicle to move from idle to a reference speed of 49.5 MPH. No lane changes are intended to happen until this phase is over.
  
 
 ### _The Finite States Machine (FSM)_
-In every moment the trajectory to follow is picked based on a simple FSM that normally considers only 3 states:
+The decision whether or not the Ego vehicle should stay in the lane it is or attempt a lanne change is based on a simple FSM that normally considers only 3 states:
 
 State | Definition
 ---- | ----
@@ -118,9 +119,10 @@ State | Definition
 `LCL` | Lane Change to the Left
 `LCR` | Lane Change to the Right
 
+* At every sampling instant the trajectories for all the possble states are generated and a cost function is associated to enable a transition. This is contained in the `implementNextTrajectory` method ([`vehicle.cpp`](/src/vehicle.cpp), lines 180-398).
 * The transition between the states id regulated by cost function that will privilege KL with respect to LCL with respect to LCR.
 * Stayning in a lane will be penalised if a reduction in speed is needed; lane changes will be penalised if there is a risk of collision.
-* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH. See, for example, the LCL use case in the `implementNextTrajectory` method in [`vehicle.cpp`](./src/vehicle.cpp), lines 154-155: 
+* The risk of collision in case of lane change is evaluated calculating the distance between the points of a lane change trajectory and the projected trajectories for the non-Ego vehicles. These distance is then compared to a reference distance that depends on the speed of the Ego vehicle, being 10 meters when the vehicle is at the reference speed of 49.5 MPH. See, for example, the LCL use case in the `implementNextTrajectory` method in [`vehicle.cpp`](./src/vehicle.cpp), lines 265-266: 
 
 ```sh
      // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
@@ -128,13 +130,15 @@ State | Definition
 ```
 *NOTE*: Some constants (`REF_SPEED`, `REF_DIST_LC` are defined together with helper methods in [`helpers.h`](./src/helpers.h).
 
-* In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively.
+* In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively. The possible successor states for any moment in time are calculated in the `successorStates` method ([`vehicle.cpp`](/src/vehicle.cpp), lines 489-522).
 
 ---
 ## Results
 Examples of the trajectories enabled by this path planner can be found in the following videos:
 
-[![Trajectory 1](http://img.youtube.com/vi/pqqxOBk2FOg/0.jpg)](https://www.youtube.com/watch?v=pqqxOBk2FOg "Trajectory 1")
+[![Example 1](http://img.youtube.com/vi/RVlWi51o3y8/0.jpg)](https://www.youtube.com/watch?v=RVlWi51o3y8 "Example 1")
+
+[![Example 2](http://img.youtube.com/vi/K7TrOyOc7bk/0.jpg)](https://www.youtube.com/watch?v=K7TrOyOc7bk "Example 2")
 
 ---
 
