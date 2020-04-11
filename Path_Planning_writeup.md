@@ -136,7 +136,7 @@ State | Definition
 ## Results
 Examples of the trajectories enabled by this path planner can be found in the following videos:
 
-[![Example 1](http://img.youtube.com/vi/RVlWi51o3y8/0.jpg)](https://www.youtube.com/watch?v=RVlWi51o3y8 "Example 1")
+<div align="center">[![Example 1](http://img.youtube.com/vi/RVlWi51o3y8/0.jpg)](https://www.youtube.com/watch?v=RVlWi51o3y8 "Example 1")</div>
 
 [![Example 2](http://img.youtube.com/vi/K7TrOyOc7bk/0.jpg)](https://www.youtube.com/watch?v=K7TrOyOc7bk "Example 2")
 
