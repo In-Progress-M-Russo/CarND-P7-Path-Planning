@@ -35,7 +35,7 @@ The code in [`main.cpp`](./src/main.cpp) has been modified mostly regarding the 
 Within this function there are few more steps that can be found.
 
 ## Message Parsing
-This is just the parsing of the various items in the message coming from the sim: can be found in lines 92-114 of [`main.cpp`](./src/main.cpp): 
+This is just the parsing of the various items in the message coming from the sim: can be found in lines 90-112 of [`main.cpp`](./src/main.cpp): 
 
 ```sh
     // ===================================================================
