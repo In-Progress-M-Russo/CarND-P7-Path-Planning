@@ -128,7 +128,7 @@ State | Definition
      // Reference distance calculated as a function of the velocity of the Ego vehicle (r_vel)
      float ref_dist_LCL = (REF_SPEED/std::max(r_vel,0.1))*REF_DIST_LC;
 ```
-*NOTE*: Some constants (`REF_SPEED`, `REF_DIST_LC` are defined together with helper methods in [`helpers.h`](./src/helpers.h).
+*NOTE*: Some constants (`REF_SPEED`, `REF_DIST_LC`) are defined together with others and a few helper methods in [`helpers.h`](./src/helpers.h).
 
 * In case the vehicle is in the leftmost/rightmost lane, only LCR/LCL changes are allowed, respectively. The possible successor states for any moment in time are calculated in the `successorStates` method ([`vehicle.cpp`](/src/vehicle.cpp), lines 489-522).
 
