@@ -29,7 +29,7 @@ The code in [`main.cpp`](./src/main.cpp) has been modified mostly regarding the 
                uWS::OpCode opCode) {
                
                ...              
-  }
+    }
 ```
 
 Within this function there are few more steps that can be found.
@@ -56,11 +56,11 @@ This is just the parsing of the various items in the message coming from the sim
     double end_path_s = j[1]["end_path_s"];
     double end_path_d = j[1]["end_path_d"];
 
-     // Sensor Fusion Data, a list of all other cars on the same side
-     //   of the road.
-     auto sensor_fusion = j[1]["sensor_fusion"];
+    // Sensor Fusion Data, a list of all other cars on the same side
+    //   of the road.
+    auto sensor_fusion = j[1]["sensor_fusion"];
 
-     json msgJson;
+    json msgJson;
 ```
 
 ## Path Planning
