@@ -114,7 +114,7 @@ The most notable features of the approach are:
 The decision whether or not the Ego vehicle should stay in the lane it is or attempt a lanne change is based on a simple FSM that normally considers only 3 states:
 
 State | Definition
----- | ----
+:----: | :----:
 `KL` | Keep Lane (regulating speed as needed)
 `LCL` | Lane Change to the Left
 `LCR` | Lane Change to the Right
